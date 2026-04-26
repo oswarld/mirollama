@@ -1,0 +1,21 @@
+mirollama - Notices and Attribution
+
+This repository includes derivative work based on the following upstream project:
+
+- Project: MiroFish
+- Upstream URL: https://github.com/666ghj/MiroFish.git
+- Upstream License: GNU Affero General Public License v3.0 (AGPL-3.0)
+
+Copyright and license notices from upstream are preserved
+in accordance with AGPL-3.0 requirements.
+
+Repository information:
+
+- Current project: mirollama
+- Current repository URL: https://github.com/oswarld/mirollama
+
+Modification notice:
+
+- This project contains modifications and local-first runtime defaults
+  (for example, Ollama-based configuration and onboarding changes).
+- See Git history and repository files for detailed change records.

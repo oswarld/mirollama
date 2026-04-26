@@ -1,9 +1,9 @@
 services:
-  mirofish:
+  mirollama:
     image: ghcr.io/666ghj/mirofish:latest
-    # 加速镜像（如拉取缓慢可替换上方地址）
+    # Accelerate the image (if the pull is slow, you can replace the address above)
     # image: ghcr.nju.edu.cn/666ghj/mirofish:latest
-    container_name: mirofish
+    container_name: mirollama
     env_file:
       - .env
     ports:

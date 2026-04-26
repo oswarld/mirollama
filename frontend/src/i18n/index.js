@@ -14,14 +14,33 @@ for (const path in localeFiles) {
   }
 }
 
-const savedLocale = localStorage.getItem('locale') || 'zh'
+const DEFAULT_LOCALE = 'en'
+const savedLocale = localStorage.getItem('locale')
+const localeFromBrowser = navigator.language || DEFAULT_LOCALE
+
+const normalizeLocale = (rawLocale) => {
+  if (!rawLocale) return DEFAULT_LOCALE
+  const lower = rawLocale.toLowerCase()
+  if (messages[lower]) return lower
+  const base = lower.split('-')[0]
+  if (messages[base]) return base
+  return DEFAULT_LOCALE
+}
+
+// Force English as system display default.
+// Existing "zh" preference is migrated to "en" unless user switches again.
+const resolvedLocale = savedLocale === 'zh'
+  ? DEFAULT_LOCALE
+  : normalizeLocale(savedLocale || localeFromBrowser)
 
 const i18n = createI18n({
   legacy: false,
-  locale: savedLocale,
-  fallbackLocale: 'zh',
-  messages
+  locale: resolvedLocale,
+  fallbackLocale: DEFAULT_LOCALE,
+  messages,
 })
+
+localStorage.setItem('locale', resolvedLocale)
 
 export { availableLocales }
 export default i18n

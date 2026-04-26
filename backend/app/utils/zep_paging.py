@@ -1,7 +1,7 @@
-"""Zep Graph 分页读取工具。
+"""Zep Graph Pagination reading tool.
 
-Zep 的 node/edge 列表接口使用 UUID cursor 分页，
-本模块封装自动翻页逻辑（含单页重试），对调用方透明地返回完整列表。
+Zep's node/edge The list interface uses UUID cursor for paging,
+This module encapsulates automatic page turning logic (including single-page retry) and returns the complete list transparently to the caller.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from zep_cloud.client import Zep
 
 from .logger import get_logger
 
-logger = get_logger('mirofish.zep_paging')
+logger = get_logger('mirollama.zep_paging')
 
 _DEFAULT_PAGE_SIZE = 100
 _MAX_NODES = 2000
@@ -31,7 +31,7 @@ def _fetch_page_with_retry(
     page_description: str = "page",
     **kwargs: Any,
 ) -> list[Any]:
-    """单页请求，失败时指数退避重试。仅重试网络/IO类瞬态错误。"""
+    """Single page request, exponential backoff and retry when failed. Retry network only/IOClass transient error."""
     if max_retries < 1:
         raise ValueError("max_retries must be >= 1")
 
@@ -64,7 +64,7 @@ def fetch_all_nodes(
     max_retries: int = _DEFAULT_MAX_RETRIES,
     retry_delay: float = _DEFAULT_RETRY_DELAY,
 ) -> list[Any]:
-    """分页获取图谱节点，最多返回 max_items 条（默认 2000）。每页请求自带重试。"""
+    """Acquire graph nodes in pages, and return max_items at most (default 2000). Each page request comes with its own retry."""
     all_nodes: list[Any] = []
     cursor: str | None = None
     page_num = 0
@@ -109,7 +109,7 @@ def fetch_all_edges(
     max_retries: int = _DEFAULT_MAX_RETRIES,
     retry_delay: float = _DEFAULT_RETRY_DELAY,
 ) -> list[Any]:
-    """分页获取图谱所有边，返回完整列表。每页请求自带重试。"""
+    """Get all the edges of the graph in pages and return the complete list. Each page request comes with its own retry."""
     all_edges: list[Any] = []
     cursor: str | None = None
     page_num = 0
