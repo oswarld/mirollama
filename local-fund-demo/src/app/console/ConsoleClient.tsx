@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PersonaGraph from '@/components/PersonaGraph';
-import type { Persona } from '@/lib/persona-graph';
+import { buildPersonaGraph, type Persona } from '@/lib/persona-graph';
 import personasKo from '@/data/personas.ko.json';
 import personasZh from '@/data/personas.zh.json';
 import personasEn from '@/data/personas.en.json';
@@ -69,6 +69,108 @@ function ResponsivePersonaGraph({
           revealCount={revealCount}
         />
       )}
+    </div>
+  );
+}
+
+function FinalReportPanel({
+  lang,
+  hypothesis,
+  reportCards,
+  ui,
+}: {
+  lang: SupportedLangKey;
+  hypothesis: string;
+  reportCards: ReportCard[];
+  ui: ReturnType<typeof getUiText>;
+}) {
+  const personas = PERSONAS_BY_LANG[lang];
+  const fullGraph = useMemo(() => buildPersonaGraph(personas, lang), [personas, lang]);
+  const provinceCount = new Set(personas.map(p => p.province)).size;
+  const sectorCount = new Set(fullGraph.nodes.map(n => n.sector)).size;
+
+  return (
+    <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/10 to-transparent p-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="mb-5">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">{ui.finalReportHeading}</div>
+        <div className="text-lg font-bold text-slate-100 mt-1">{ui.finalReportSubtitle}</div>
+      </div>
+
+      <div className="mb-5">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">{ui.hypothesisLabel}</div>
+        <div className="text-sm text-slate-200 leading-relaxed bg-[#050505]/60 border border-white/5 rounded-xl p-4">
+          {hypothesis}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 mb-5">
+        <div className="bg-[#050505]/60 border border-white/5 rounded-xl p-3">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{ui.agentCohortLabel}</div>
+          <div className="mt-1 text-xl font-black text-slate-100">
+            {personas.length} <span className="text-xs font-medium text-slate-500">{ui.personasUnit}</span>
+          </div>
+          <div className="text-[10px] text-slate-500 mt-0.5">
+            {provinceCount} {ui.provincesUnit} · {sectorCount} {ui.sectorsUnit}
+          </div>
+        </div>
+        <div className="bg-[#050505]/60 border border-white/5 rounded-xl p-3">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{ui.simulationRoundsLabel}</div>
+          <div className="mt-1 text-xl font-black text-slate-100">
+            {TOTAL_ROUNDS} <span className="text-xs font-medium text-slate-500">{ui.roundsUnit}</span>
+          </div>
+        </div>
+        <div className="bg-[#050505]/60 border border-white/5 rounded-xl p-3">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{ui.relationsLabel}</div>
+          <div className="mt-1 text-xl font-black text-slate-100">
+            {fullGraph.edges.length} <span className="text-xs font-medium text-slate-500">{ui.edgesUnit}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-5">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">{ui.keyInsightsLabel}</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {reportCards.map(card => (
+            <div
+              key={card.title}
+              className={cn(
+                'rounded-xl border p-4 bg-[#050505]/60',
+                card.accent === 'emerald' && 'border-emerald-500/20',
+                card.accent === 'blue' && 'border-blue-500/20',
+                card.accent === 'amber' && 'border-amber-500/20',
+              )}
+            >
+              <div className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">{card.title}</div>
+              <div
+                className={cn(
+                  'text-base font-black tracking-tight',
+                  card.accent === 'emerald' && 'text-emerald-400',
+                  card.accent === 'blue' && 'text-blue-400',
+                  card.accent === 'amber' && 'text-amber-400',
+                )}
+              >
+                {card.value}
+              </div>
+              <div className="text-xs text-slate-400 mt-1">{card.note}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-white/5 bg-[#050505]/60 p-4 flex items-center justify-between gap-4">
+        <div>
+          <div className="text-sm font-bold text-slate-100">{ui.tryRealHeading}</div>
+          <div className="text-xs text-slate-500 mt-1">{ui.tryRealNote}</div>
+        </div>
+        <a
+          href="https://github.com/oswarld/mirollama"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 px-4 py-2 rounded-xl transition-colors"
+        >
+          {ui.viewOnGithub} →
+        </a>
+      </div>
     </div>
   );
 }
@@ -221,6 +323,23 @@ function getUiText(lang: SupportedLang) {
         '인구 유입/정착처럼 “사람” 지표에 직접 연결되는 프로그램은 효과를 관측·검증하기 쉽습니다. 반면 시설은 운영 프로그램과 결합되지 않으면 인구 성과로 이어진다는 보장이 약해 평가에서 불리할 수 있습니다.',
       askPlaceholder: '리포트 근거를 바탕으로 질문을 입력하세요…',
       staticDemoWarning: '이 페이지는 정적 데모입니다. 실제 LLM/에이전트 연동은 연결되어 있지 않습니다.',
+      demoEndedHeading: '데모는 여기까지입니다',
+      demoEndedNote: '이 정적 데모에서 보여드릴 수 있는 흐름은 여기까지예요. 자유로운 질의응답은 실제 mirollama 환경에서 가능합니다.',
+      finalReportHeading: '최종 리포트',
+      finalReportSubtitle: '다중 에이전트 시뮬레이션 결과 요약',
+      hypothesisLabel: '검증한 가설',
+      agentCohortLabel: '에이전트 코호트',
+      personasUnit: '명',
+      provincesUnit: '지역',
+      sectorsUnit: '직업군',
+      simulationRoundsLabel: '시뮬레이션',
+      roundsUnit: '라운드',
+      relationsLabel: '관계',
+      edgesUnit: '엣지',
+      keyInsightsLabel: '핵심 인사이트',
+      tryRealHeading: '실제 환경에서 직접 시도',
+      tryRealNote: '내 문서로 mirollama를 로컬에서 돌려보고 싶다면 GitHub에서 시작할 수 있어요.',
+      viewOnGithub: 'GitHub에서 보기',
     };
   }
 
@@ -253,6 +372,23 @@ function getUiText(lang: SupportedLang) {
         '与人口流入/留存等“人”的指标直接相关的项目更容易观察与验证成效；而设施若缺少运营与项目机制，往往难以保证能转化为人口成效，因此可能更不利。',
       askPlaceholder: '基于报告证据输入问题…',
       staticDemoWarning: '此页面为静态演示，未连接真实的 LLM/代理交互。',
+      demoEndedHeading: '演示到此结束',
+      demoEndedNote: '本静态演示展示的流程到此结束。自由提问可在真实的 mirollama 环境中进行。',
+      finalReportHeading: '最终报告',
+      finalReportSubtitle: '多智能体仿真结果摘要',
+      hypothesisLabel: '已验证的假设',
+      agentCohortLabel: '智能体队列',
+      personasUnit: '人',
+      provincesUnit: '地区',
+      sectorsUnit: '行业',
+      simulationRoundsLabel: '仿真',
+      roundsUnit: '轮',
+      relationsLabel: '关系',
+      edgesUnit: '边',
+      keyInsightsLabel: '关键洞察',
+      tryRealHeading: '在真实环境中亲自体验',
+      tryRealNote: '想用自己的文档在本地运行 mirollama，请前往 GitHub 开始。',
+      viewOnGithub: '在 GitHub 上查看',
     };
   }
 
@@ -284,6 +420,23 @@ function getUiText(lang: SupportedLang) {
       'These programs directly change settlement incentives and daily life friction. That is observable as retention and inflow. Facilities without a program layer do not guarantee population outcomes under the criteria.',
     askPlaceholder: 'Ask ReportAgent anything about the simulation...',
     staticDemoWarning: 'This page is a static demo only. Deep interaction with Agents is not connected to an LLM.',
+    demoEndedHeading: 'Demo ends here',
+    demoEndedNote: 'That is the full sequence this static demo can show. Free-form Q&A is available when you run mirollama for real.',
+    finalReportHeading: 'Final Report',
+    finalReportSubtitle: 'Summary of the multi-agent simulation run',
+    hypothesisLabel: 'Hypothesis tested',
+    agentCohortLabel: 'Agent cohort',
+    personasUnit: 'personas',
+    provincesUnit: 'regions',
+    sectorsUnit: 'sectors',
+    simulationRoundsLabel: 'Simulation',
+    roundsUnit: 'rounds',
+    relationsLabel: 'Relations',
+    edgesUnit: 'edges',
+    keyInsightsLabel: 'Key insights',
+    tryRealHeading: 'Try it for real',
+    tryRealNote: 'Want to run mirollama locally with your own documents? Start on GitHub.',
+    viewOnGithub: 'View on GitHub',
   };
 }
 
@@ -556,7 +709,8 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
       );
     }
     if (stepId === 5) {
-      const qaEnabled = currentStep === 5;
+      const qaEnabled = currentStep === 5 && runState !== 'done';
+      const showEndedNotice = runState === 'done';
       return (
         <div className="space-y-6 animate-in fade-in duration-500">
           <div className="space-y-4">
@@ -588,59 +742,71 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
               </div>
             )}
           </div>
-          <div className="relative">
-            <input
-              type="text"
-              value={chatDraft}
-              onChange={e => setChatDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key !== 'Enter') return;
-                e.preventDefault();
-                if (!qaEnabled) return;
-                if (!chatDraft.trim()) return;
-                if (!selectedScenario) return;
-                const q = chatDraft.trim();
-                const normalized = q.toLowerCase();
-                const hit = selectedScenario.qa.find(pair =>
-                  pair.keywords.some(k => normalized.includes(k.toLowerCase())),
-                );
-                const answer = hit?.answer ?? selectedScenario.qa[0]?.answer ?? ui.qaAnswer;
-                setChatMessages(prev => [
-                  ...prev,
-                  makeChatMessage('user', q),
-                  makeChatMessage('agent', answer),
-                ]);
-                setChatDraft('');
-              }}
-              placeholder={ui.askPlaceholder}
-              disabled={!qaEnabled}
-              className="w-full bg-[#050505] border border-white/10 rounded-xl pl-5 pr-12 py-4 text-sm text-slate-300 focus:outline-none disabled:opacity-50 shadow-inner"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (!qaEnabled) return;
-                if (!chatDraft.trim()) return;
-                if (!selectedScenario) return;
-                const q = chatDraft.trim();
-                const normalized = q.toLowerCase();
-                const hit = selectedScenario.qa.find(pair =>
-                  pair.keywords.some(k => normalized.includes(k.toLowerCase())),
-                );
-                const answer = hit?.answer ?? selectedScenario.qa[0]?.answer ?? ui.qaAnswer;
-                setChatMessages(prev => [
-                  ...prev,
-                  makeChatMessage('user', q),
-                  makeChatMessage('agent', answer),
-                ]);
-                setChatDraft('');
-              }}
-              disabled={!qaEnabled || !chatDraft.trim()}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-500 transition-colors disabled:opacity-50"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
+          {showEndedNotice ? (
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="text-sm text-emerald-100/90 leading-relaxed">
+                <div className="font-bold text-emerald-300 mb-1">{ui.demoEndedHeading}</div>
+                <div className="text-slate-300">{ui.demoEndedNote}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="relative">
+              <input
+                type="text"
+                value={chatDraft}
+                onChange={e => setChatDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter') return;
+                  e.preventDefault();
+                  if (!qaEnabled) return;
+                  if (!chatDraft.trim()) return;
+                  if (!selectedScenario) return;
+                  const q = chatDraft.trim();
+                  const normalized = q.toLowerCase();
+                  const hit = selectedScenario.qa.find(pair =>
+                    pair.keywords.some(k => normalized.includes(k.toLowerCase())),
+                  );
+                  const answer = hit?.answer ?? selectedScenario.qa[0]?.answer ?? ui.qaAnswer;
+                  setChatMessages(prev => [
+                    ...prev,
+                    makeChatMessage('user', q),
+                    makeChatMessage('agent', answer),
+                  ]);
+                  setChatDraft('');
+                }}
+                placeholder={ui.askPlaceholder}
+                disabled={!qaEnabled}
+                className="w-full bg-[#050505] border border-white/10 rounded-xl pl-5 pr-12 py-4 text-sm text-slate-300 focus:outline-none disabled:opacity-50 shadow-inner"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (!qaEnabled) return;
+                  if (!chatDraft.trim()) return;
+                  if (!selectedScenario) return;
+                  const q = chatDraft.trim();
+                  const normalized = q.toLowerCase();
+                  const hit = selectedScenario.qa.find(pair =>
+                    pair.keywords.some(k => normalized.includes(k.toLowerCase())),
+                  );
+                  const answer = hit?.answer ?? selectedScenario.qa[0]?.answer ?? ui.qaAnswer;
+                  setChatMessages(prev => [
+                    ...prev,
+                    makeChatMessage('user', q),
+                    makeChatMessage('agent', answer),
+                  ]);
+                  setChatDraft('');
+                }}
+                disabled={!qaEnabled || !chatDraft.trim()}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-500 transition-colors disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       );
     }
@@ -1075,7 +1241,8 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
                       <p className="text-sm font-medium">{stageCopy[0].desc}</p>
                     </div>
                   ) : (
-                    ([1, 2, 3, 4, 5] as Step[]).map((stepId) => {
+                    <>
+                      {([1, 2, 3, 4, 5] as Step[]).map((stepId) => {
                       const isCurrent = currentStep === stepId;
                       const isCompleted = currentStep > stepId;
                       
@@ -1141,7 +1308,16 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
                           )}
                         </div>
                       )
-                    })
+                    })}
+                      {runState === 'done' && activePlan && (
+                        <FinalReportPanel
+                          lang={config.lang}
+                          hypothesis={hypothesis.trim() || selectedScenario?.hypothesis || ''}
+                          reportCards={activePlan.reportCards}
+                          ui={ui}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
               </div>
