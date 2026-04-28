@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# claude code (per-developer, contains absolute paths)
+.claude/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

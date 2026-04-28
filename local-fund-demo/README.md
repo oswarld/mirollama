@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Local Fund Demo (Static)
 
-## Getting Started
+Static, PDF-grounded demo console for [mirollama](https://github.com/oswarld/mirollama). It does **not** call external APIs. Built with Next.js App Router (16.x) + Tailwind v4 + `react-force-graph-2d`.
 
-First, run the development server:
+### Routes
+
+- `/` redirects to `/live-demo/{lang}` based on the browser language.
+- `/live-demo/ko`, `/live-demo/en`, `/live-demo/zh` render the demo console with a scenario-specific source PDF.
+
+### What's on screen
+
+The Step 1 (Graph Build) panel renders 50 scenario-relevant personas as a force-directed graph. Nodes are colored by `province × generation`, and connected by simple rules (same region → same sector → same generation). The Step 3 (Simulation) panel ticks a 50-round counter to evoke a multi-agent run.
+
+Persona JSON files at `src/data/personas.{ko,zh,en}.json` are static. The graph is built client-side in `src/lib/persona-graph.ts` and rendered by `src/components/PersonaGraph.tsx`.
+
+### Persona data
+
+| Lang | Source | Scenario |
+|------|--------|----------|
+| `ko` | `Nemotron-Personas-Korea` (sampled via `scripts/extract-personas-ko.py`) | 지방소멸대응기금 (regional decline response fund) |
+| `zh` | hand-authored | 第一次债权人会议 (first creditors' meeting) |
+| `en` | hand-authored | FAA civil aviation data classification |
+
+To regenerate the Korean subset (requires the Nemotron Arrow files at `../Nemotron-Personas-Korea/`):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+uv run --with datasets --with pyarrow python scripts/extract-personas-ko.py
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Local PDFs
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The demo loads PDFs from `./public/` via iframe. Keep filenames in sync with `src/app/live-demo/[lang]/page.tsx`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Build & Serve
 
-## Learn More
+```bash
+npm install
+npm run build
+npm run start    # serves the production build on :3000
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+> **Heads up — `next dev` (Turbopack) currently hangs** because the parent
+> `mirollama/package.json` is picked up as a workspace root. For local iteration
+> use `npm run build && npm run start` until that's resolved (likely via a
+> `turbopack.root` adjustment or by isolating the demo from the parent repo).
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+If this repository is a monorepo, set the Vercel project Root Directory to `local-fund-demo`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Framework Preset: Next.js
+- Build Command: `npm run build`
+- Output: leave default (Next.js)

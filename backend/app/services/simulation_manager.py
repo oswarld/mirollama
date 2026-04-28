@@ -14,7 +14,7 @@ from enum import Enum
 
 from ..config import Config
 from ..utils.logger import get_logger
-from .zep_entity_reader import ZepEntityReader, FilteredEntities
+from .ontology_generator import OntologyGenerator
 from .oasis_profile_generator import OasisProfileGenerator, OasisAgentProfile
 from .simulation_config_generator import SimulationConfigGenerator, SimulationParameters
 from ..utils.locale import t
@@ -112,12 +112,31 @@ class SimulationState:
         }
 
 
+class EntityNode:
+    """Mock entity node for local fallback"""
+    def __init__(self, uuid, name, labels, summary, attributes, related_edges, related_nodes):
+        self.uuid = uuid
+        self.name = name
+        self.labels = labels
+        self.summary = summary
+        self.attributes = attributes
+        self.related_edges = related_edges
+        self.related_nodes = related_nodes
+
+class FilteredEntities:
+    """Mock filtered entities for local fallback"""
+    def __init__(self, entities, entity_types, total_count, filtered_count):
+        self.entities = entities
+        self.entity_types = entity_types
+        self.total_count = total_count
+        self.filtered_count = filtered_count
+
 class SimulationManager:
     """
     Simulation Manager
     
     Core functions:
-    1. Read entities from Zep map and filter
+    1. Read entities from local map and filter
     2. Generate OASIS Agent Profile
     3. Use LLM to intelligently generate simulation configuration parameters
     4. Prepare all files required for the preset script
@@ -136,9 +155,9 @@ class SimulationManager:
         # In-memory simulation state cache
         self._simulations: Dict[str, SimulationState] = {}
 
-    def _is_zep_entity_pipeline_enabled(self) -> bool:
+    def _is_entity_pipeline_enabled(self) -> bool:
         provider = (Config.SEARCH_PROVIDER or 'none').lower()
-        return provider == 'zep' and bool(Config.ZEP_API_KEY)
+        return provider == 'none'
 
     def _build_local_fallback_entities(
         self,
@@ -146,7 +165,7 @@ class SimulationManager:
         simulation_requirement: str,
         defined_entity_types: Optional[List[str]] = None,
     ) -> FilteredEntities:
-        """Build minimal local entities when Zep graph pipeline is disabled."""
+        """Build minimal local entities when graph pipeline is disabled."""
         requested_types = [etype for etype in (defined_entity_types or []) if etype]
         default_types = ['Person', 'Organization', 'Topic']
         entity_types = requested_types[:3] if requested_types else default_types
@@ -245,7 +264,7 @@ class SimulationManager:
         
         Args:
             project_id: projectID
-            graph_id: ZepAtlasID
+            graph_id: LocalGraphID
             enable_twitter: Whether to enable Twitter impersonation
             enable_reddit: Whether to enable Reddit impersonation
             
@@ -283,7 +302,7 @@ class SimulationManager:
         Prepare simulation environment (full automation)
         
         Steps:
-        1. Read and filter entities from Zep map
+        1. Read and filter entities from map
         2. Generate OASIS Agent Profile for each entity (optional LLM enhancement, supports parallelism)
         3. Use LLM to intelligently generate simulation configuration parameters (time, activity, speaking frequency, etc.)
         4. Save the configuration file and Profile file
@@ -313,33 +332,13 @@ class SimulationManager:
             
             # ========== stage1: Read and filter entities ==========
             if progress_callback:
-                progress_callback("reading", 0, t('progress.connectingZepGraph'))
+                progress_callback("reading", 0, t('progress.readingNodeData'))
             
-            if self._is_zep_entity_pipeline_enabled() and state.graph_id and not state.graph_id.startswith('local_'):
-                reader = ZepEntityReader()
-
-                if progress_callback:
-                    progress_callback("reading", 30, t('progress.readingNodeData'))
-
-                try:
-                    filtered = reader.filter_defined_entities(
-                        graph_id=state.graph_id,
-                        defined_entity_types=defined_entity_types,
-                        enrich_with_edges=True
-                    )
-                except Exception as zep_error:
-                    logger.warning(f"Zep entity read failed. Falling back to local entities: {zep_error}")
-                    filtered = self._build_local_fallback_entities(
-                        document_text=document_text,
-                        simulation_requirement=simulation_requirement,
-                        defined_entity_types=defined_entity_types,
-                    )
-            else:
-                filtered = self._build_local_fallback_entities(
-                    document_text=document_text,
-                    simulation_requirement=simulation_requirement,
-                    defined_entity_types=defined_entity_types,
-                )
+            filtered = self._build_local_fallback_entities(
+                document_text=document_text,
+                simulation_requirement=simulation_requirement,
+                defined_entity_types=defined_entity_types,
+            )
             
             state.entities_count = filtered.filtered_count
             state.entity_types = list(filtered.entity_types)
@@ -369,7 +368,7 @@ class SimulationManager:
                     total=total_entities
                 )
             
-            # Pass in graph_id to enable Zep retrieval for richer context
+            # Pass in graph_id to enable graph retrieval for richer context
             generator = OasisProfileGenerator(graph_id=state.graph_id)
             
             def profile_progress(current, total, msg):
@@ -397,7 +396,7 @@ class SimulationManager:
                 entities=filtered.entities,
                 use_llm=use_llm_for_profiles,
                 progress_callback=profile_progress,
-                graph_id=state.graph_id,  # Pass in graph_id for Zep retrieval
+                graph_id=state.graph_id,  # Pass in graph_id for graph retrieval
                 parallel_count=parallel_profile_count,  # Number of parallel builds
                 realtime_output_path=realtime_output_path,  # Save path in real time
                 output_platform=realtime_platform  # Output format

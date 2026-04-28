@@ -21,7 +21,6 @@ from queue import Queue
 from ..config import Config
 from ..utils.logger import get_logger
 from ..utils.locale import get_locale, set_locale
-from .zep_graph_memory_updater import ZepGraphMemoryManager
 from .simulation_ipc import SimulationIPCClient, CommandType, IPCResponse
 
 logger = get_logger('mirollama.simulation_runner')
@@ -315,8 +314,6 @@ class SimulationRunner:
         simulation_id: str,
         platform: str = "parallel",  # twitter / reddit / parallel
         max_rounds: int = None,  # Maximum number of simulation rounds (optional, used to truncate simulations that are too long)
-        enable_graph_memory_update: bool = False,  # Whether to update the activity to the Zep map
-        graph_id: str = None  # ZepMap ID (required when map updates are enabled)
     ) -> SimulationRunState:
         """
         Start simulation
@@ -325,8 +322,6 @@ class SimulationRunner:
             simulation_id: simulationID
             platform: Running platform (twitter/reddit/parallel)
             max_rounds: Maximum number of simulation rounds (optional, used to truncate simulations that are too long)
-            enable_graph_memory_update: Whether to dynamically update Agent activities to the Zep map
-            graph_id: ZepMap ID (required when map updates are enabled)
             
         Returns:
             SimulationRunState
@@ -368,10 +363,6 @@ class SimulationRunner:
         )
         
         cls._save_run_state(state)
-        
-        # Graph memory update is disabled for local-first migration.
-        enable_graph_memory_update = False
-        cls._graph_memory_enabled[simulation_id] = False
         
         # Determine which script to run (the script is located in backend/scripts/ Table of contents)
         if platform == "twitter":
@@ -544,11 +535,6 @@ class SimulationRunner:
         finally:
             # Stop map memory updater
             if cls._graph_memory_enabled.get(simulation_id, False):
-                try:
-                    ZepGraphMemoryManager.stop_updater(simulation_id)
-                    logger.info(f"Stopped graph memory update: simulation_id={simulation_id}")
-                except Exception as e:
-                    logger.error(f"Failed to stop graph memory updater: {e}")
                 cls._graph_memory_enabled.pop(simulation_id, None)
             
             # Clean up process resources
@@ -589,12 +575,6 @@ class SimulationRunner:
         Returns:
             new read position
         """
-        # Check if map memory update is enabled
-        graph_memory_enabled = cls._graph_memory_enabled.get(state.simulation_id, False)
-        graph_updater = None
-        if graph_memory_enabled:
-            graph_updater = ZepGraphMemoryManager.get_updater(state.simulation_id)
-        
         try:
             with open(log_path, 'r', encoding='utf-8') as f:
                 f.seek(position)
@@ -667,10 +647,6 @@ class SimulationRunner:
                             # Update rounds
                             if action.round_num and action.round_num > state.current_round:
                                 state.current_round = action.round_num
-                            
-                            # If map memory updates are enabled, send activity toZep
-                            if graph_updater:
-                                graph_updater.add_activity_from_dict(action_data, platform)
                             
                         except json.JSONDecodeError:
                             pass
@@ -800,11 +776,6 @@ class SimulationRunner:
         
         # Stop map memory updater
         if cls._graph_memory_enabled.get(simulation_id, False):
-            try:
-                ZepGraphMemoryManager.stop_updater(simulation_id)
-                logger.info(f"Stopped graph memory update: simulation_id={simulation_id}")
-            except Exception as e:
-                logger.error(f"Failed to stop graph memory updater: {e}")
             cls._graph_memory_enabled.pop(simulation_id, None)
         
         logger.info(f"Simulation stopped: {simulation_id}")
@@ -1194,10 +1165,6 @@ class SimulationRunner:
         logger.info("Cleaning up all simulation processes...")
         
         # First stop all map memory updaters (stop_all will print logs internally)
-        try:
-            ZepGraphMemoryManager.stop_all()
-        except Exception as e:
-            logger.error(f"Failed to stop graph memory updater: {e}")
         cls._graph_memory_enabled.clear()
         
         # Copy dictionary to avoid modification while iterating

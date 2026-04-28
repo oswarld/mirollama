@@ -1,6 +1,6 @@
 """
 Simulate related API routing
-Step2: ZepEntity reading and filtering, OASIS simulation preparation and operation (full automation)
+Step2: Entity reading and filtering, OASIS simulation preparation and operation (full automation)
 """
 
 import os
@@ -9,7 +9,6 @@ from flask import request, jsonify, send_file
 
 from . import simulation_bp
 from ..config import Config
-from ..services.zep_entity_reader import ZepEntityReader
 from ..services.oasis_profile_generator import OasisProfileGenerator
 from ..services.simulation_manager import SimulationManager, SimulationStatus
 from ..services.simulation_runner import SimulationRunner, RunnerStatus
@@ -43,10 +42,6 @@ def optimize_interview_prompt(prompt: str) -> str:
     return f"{INTERVIEW_PROMPT_PREFIX}{prompt}"
 
 
-def _is_zep_graph_mode() -> bool:
-    return (Config.SEARCH_PROVIDER or 'none').lower() == 'zep' and bool(Config.ZEP_API_KEY)
-
-
 # ============== Entity reading interface ==============
 
 @simulation_bp.route('/entities/<graph_id>', methods=['GET'])
@@ -61,34 +56,15 @@ def get_graph_entities(graph_id: str):
         enrich: Whether to obtain relevant side information (default true)
     """
     try:
-        if not _is_zep_graph_mode():
-            return jsonify({
-                "success": True,
-                "data": {
-                    "entities": [],
-                    "entity_types": [],
-                    "total_count": 0,
-                    "filtered_count": 0,
-                    "message": "Entity graph pipeline is skipped in local mode.",
-                }
-            })
-        
-        entity_types_str = request.args.get('entity_types', '')
-        entity_types = [t.strip() for t in entity_types_str.split(',') if t.strip()] if entity_types_str else None
-        enrich = request.args.get('enrich', 'true').lower() == 'true'
-        
-        logger.info(f"Fetching graph entities: graph_id={graph_id}, entity_types={entity_types}, enrich={enrich}")
-        
-        reader = ZepEntityReader()
-        result = reader.filter_defined_entities(
-            graph_id=graph_id,
-            defined_entity_types=entity_types,
-            enrich_with_edges=enrich
-        )
-        
         return jsonify({
             "success": True,
-            "data": result.to_dict()
+            "data": {
+                "entities": [],
+                "entity_types": [],
+                "total_count": 0,
+                "filtered_count": 0,
+                "message": "Entity graph pipeline is skipped in local mode.",
+            }
         })
         
     except Exception as e:
@@ -104,25 +80,10 @@ def get_graph_entities(graph_id: str):
 def get_entity_detail(graph_id: str, entity_uuid: str):
     """Get details of a single entity"""
     try:
-        if not _is_zep_graph_mode():
-            return jsonify({
-                "success": False,
-                "error": "Entity details are unavailable because graph mode is disabled."
-            }), 400
-        
-        reader = ZepEntityReader()
-        entity = reader.get_entity_with_context(graph_id, entity_uuid)
-        
-        if not entity:
-            return jsonify({
-                "success": False,
-                "error": t('api.entityNotFound', id=entity_uuid)
-            }), 404
-        
         return jsonify({
-            "success": True,
-            "data": entity.to_dict()
-        })
+            "success": False,
+            "error": "Entity details are unavailable because graph mode is disabled."
+        }), 400
         
     except Exception as e:
         logger.error(f"Failed to fetch entity details: {str(e)}")
@@ -137,32 +98,13 @@ def get_entity_detail(graph_id: str, entity_uuid: str):
 def get_entities_by_type(graph_id: str, entity_type: str):
     """Get all entities of the specified type"""
     try:
-        if not _is_zep_graph_mode():
-            return jsonify({
-                "success": True,
-                "data": {
-                    "entity_type": entity_type,
-                    "count": 0,
-                    "entities": [],
-                    "message": "Entity graph pipeline is skipped in local mode.",
-                }
-            })
-        
-        enrich = request.args.get('enrich', 'true').lower() == 'true'
-        
-        reader = ZepEntityReader()
-        entities = reader.get_entities_by_type(
-            graph_id=graph_id,
-            entity_type=entity_type,
-            enrich_with_edges=enrich
-        )
-        
         return jsonify({
             "success": True,
             "data": {
                 "entity_type": entity_type,
-                "count": len(entities),
-                "entities": [e.to_dict() for e in entities]
+                "count": 0,
+                "entities": [],
+                "message": "Entity graph pipeline is skipped in local mode.",
             }
         })
         
@@ -224,7 +166,7 @@ def create_simulation():
             }), 404
         
         graph_id = data.get('graph_id') or project.graph_id
-        if not graph_id and not _is_zep_graph_mode():
+        if not graph_id:
             graph_id = f"local_{project_id}"
         if not graph_id:
             return jsonify({
@@ -388,7 +330,7 @@ def prepare_simulation():
     
     Steps:
     1. Check whether the preparations have been completed
-    2. Read and filter entities from the Zep map
+    2. Read and filter entities from the map
     3. Generate OASIS Agent Profile for each entity (with retry mechanism)
     4. LLM intelligently generates simulation configuration (with retry mechanism)
     5. Save configuration files and preset scripts
@@ -487,23 +429,8 @@ def prepare_simulation():
         
         # ========== Get the number of entities synchronously (before starting the background task) ==========
         # In this way, the front end can immediately obtain the expected total number of Agents after calling prepare.
-        if _is_zep_graph_mode() and state.graph_id and not str(state.graph_id).startswith('local_'):
-            try:
-                logger.info(f"Sync entity count preview from graph: graph_id={state.graph_id}")
-                reader = ZepEntityReader()
-                filtered_preview = reader.filter_defined_entities(
-                    graph_id=state.graph_id,
-                    defined_entity_types=entity_types_list,
-                    enrich_with_edges=False
-                )
-                state.entities_count = filtered_preview.filtered_count
-                state.entity_types = list(filtered_preview.entity_types)
-                logger.info(f"Expected entities: {filtered_preview.filtered_count}, types={filtered_preview.entity_types}")
-            except Exception as e:
-                logger.warning(f"Entity preview failed. Background task will retry/fallback: {e}")
-        else:
-            state.entities_count = 0
-            state.entity_types = []
+        state.entities_count = 0
+        state.entity_types = []
         
         # Create an asynchronous task
         task_manager = TaskManager()
@@ -1406,54 +1333,10 @@ def generate_profiles():
         }
     """
     try:
-        data = request.get_json() or {}
-        
-        graph_id = data.get('graph_id')
-        if not graph_id:
-            return jsonify({
-                "success": False,
-                "error": t('api.requireGraphId')
-            }), 400
-        
-        entity_types = data.get('entity_types')
-        use_llm = data.get('use_llm', True)
-        platform = data.get('platform', 'reddit')
-        
-        reader = ZepEntityReader()
-        filtered = reader.filter_defined_entities(
-            graph_id=graph_id,
-            defined_entity_types=entity_types,
-            enrich_with_edges=True
-        )
-        
-        if filtered.filtered_count == 0:
-            return jsonify({
-                "success": False,
-                "error": t('api.noMatchingEntities')
-            }), 400
-        
-        generator = OasisProfileGenerator()
-        profiles = generator.generate_profiles_from_entities(
-            entities=filtered.entities,
-            use_llm=use_llm
-        )
-        
-        if platform == "reddit":
-            profiles_data = [p.to_reddit_format() for p in profiles]
-        elif platform == "twitter":
-            profiles_data = [p.to_twitter_format() for p in profiles]
-        else:
-            profiles_data = [p.to_dict() for p in profiles]
-        
         return jsonify({
-            "success": True,
-            "data": {
-                "platform": platform,
-                "entity_types": list(filtered.entity_types),
-                "count": len(profiles_data),
-                "profiles": profiles_data
-            }
-        })
+            "success": False,
+            "error": "Profile generation is skipped in local mode."
+        }), 400
         
     except Exception as e:
         logger.error(f"Failed to generate profile: {str(e)}")
@@ -1476,7 +1359,7 @@ def start_simulation():
             "simulation_id": "sim_xxxx",          // Required, simulateID
             "platform": "parallel",                // Optional: twitter / reddit / parallel (default)
             "max_rounds": 100,                     // Optional: Maximum number of simulation rounds, used to truncate simulations that are too long
-            "enable_graph_memory_update": false,   // Optional: Whether to dynamically update Agent activities to Zep map memory
+            "enable_graph_memory_update": false,   // Optional: Whether to dynamically update Agent activities to map memory
             "force": false                         // Optional: Force restart (will stop running simulation and clear logs)
         }
 
@@ -1487,7 +1370,7 @@ def start_simulation():
         - Suitable for scenarios where the simulation needs to be re-run
 
     About enable_graph_memory_update:
-        - Once enabled, all Agent activities in the simulation (posts, comments, likes, etc.) will be updated to the Zep map in real time
+        - Once enabled, all Agent activities in the simulation (posts, comments, likes, etc.) will be updated to the map in real time
         - This allows the graph to"remember"Simulation process for subsequent analysis or AI dialogue
         - Requires simulation associated projects to have a valid graph_id
         - Adopt batch update mechanism to reduce the number of API calls

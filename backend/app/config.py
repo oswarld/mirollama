@@ -32,9 +32,6 @@ class Config:
     LLM_BASE_URL = os.environ.get('LLM_BASE_URL', 'http://localhost:11434/v1')
     LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME', 'gpt-oss:20b')
 
-    # ZepConfiguration
-    ZEP_API_KEY = os.environ.get('ZEP_API_KEY')
-
     SEARCH_PROVIDER = os.environ.get('SEARCH_PROVIDER', 'none')
     SEARXNG_BASE_URL = os.environ.get('SEARXNG_BASE_URL', '')
     WEB_SEARCH_LANGUAGE = os.environ.get('WEB_SEARCH_LANGUAGE', 'ko-KR')
@@ -81,10 +78,8 @@ class Config:
             errors.append("LLM_API_KEY is not configured")
 
         provider = (cls.SEARCH_PROVIDER or 'none').lower()
-        if provider not in {'none', 'searxng', 'zep'}:
-            errors.append("SEARCH_PROVIDER supports only: none / searxng / zep")
-        if provider == 'zep' and not cls.ZEP_API_KEY:
-            errors.append("ZEP_API_KEY is not configured")
+        if provider not in {'none', 'searxng'}:
+            errors.append("SEARCH_PROVIDER supports only: none / searxng")
         if provider == 'searxng' and not cls.SEARXNG_BASE_URL:
             errors.append("SEARXNG_BASE_URL is not configured")
 

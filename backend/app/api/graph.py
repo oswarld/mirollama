@@ -10,8 +10,6 @@ from flask import request, jsonify
 
 from . import graph_bp
 from ..config import Config
-from ..services.ontology_generator import OntologyGenerator
-from ..services.graph_builder import GraphBuilderService
 from ..services.text_processor import TextProcessor
 from ..utils.file_parser import FileParser
 from ..utils.logger import get_logger
@@ -21,10 +19,6 @@ from ..models.project import ProjectManager, ProjectStatus
 
 # Get logger
 logger = get_logger('mirollama.api')
-
-
-def _is_zep_graph_mode() -> bool:
-    return (Config.SEARCH_PROVIDER or 'none').lower() == 'zep' and bool(Config.ZEP_API_KEY)
 
 
 def allowed_file(filename: str) -> bool:
@@ -354,183 +348,22 @@ def build_graph():
                 "error": t('api.ontologyNotFound')
             }), 400
 
-        if not _is_zep_graph_mode():
-            project.status = ProjectStatus.GRAPH_COMPLETED
-            project.graph_id = project.graph_id or f"local_{project_id}"
-            project.graph_build_task_id = None
-            project.error = None
-            ProjectManager.save_project(project)
-
-            return jsonify({
-                "success": True,
-                "data": {
-                    "project_id": project_id,
-                    "task_id": None,
-                    "message": "Graph build is skipped in local mode.",
-                    "graph_id": project.graph_id,
-                    "node_count": 0,
-                    "edge_count": 0,
-                    "chunk_count": 0
-                }
-            })
-        
-        # Create an asynchronous task
-        task_manager = TaskManager()
-        task_id = task_manager.create_task(f"Build graph: {graph_name}")
-        logger.info(f"Graph build task created: task_id={task_id}, project_id={project_id}")
-        
-        # Update project status
-        project.status = ProjectStatus.GRAPH_BUILDING
-        project.graph_build_task_id = task_id
+        project.status = ProjectStatus.GRAPH_COMPLETED
+        project.graph_id = project.graph_id or f"local_{project_id}"
+        project.graph_build_task_id = None
+        project.error = None
         ProjectManager.save_project(project)
-        
-        # Capture locale before spawning background thread
-        current_locale = get_locale()
 
-        # Start background task
-        def build_task():
-            set_locale(current_locale)
-            build_logger = get_logger('mirollama.build')
-            try:
-                build_logger.info(f"[{task_id}] Start graph build...")
-                task_manager.update_task(
-                    task_id, 
-                    status=TaskStatus.PROCESSING,
-                    message=t('progress.initGraphService')
-                )
-                
-                # Create a graph building service
-                builder = GraphBuilderService(api_key=Config.ZEP_API_KEY)
-                
-                # Chunking
-                task_manager.update_task(
-                    task_id,
-                    message=t('progress.textChunking'),
-                    progress=5
-                )
-                chunks = TextProcessor.split_text(
-                    text, 
-                    chunk_size=chunk_size, 
-                    overlap=chunk_overlap
-                )
-                total_chunks = len(chunks)
-                
-                # Create a map
-                task_manager.update_task(
-                    task_id,
-                    message=t('progress.creatingZepGraph'),
-                    progress=10
-                )
-                graph_id = builder.create_graph(name=graph_name)
-                
-                # update projectgraph_id
-                project.graph_id = graph_id
-                ProjectManager.save_project(project)
-                
-                # Set up the body
-                task_manager.update_task(
-                    task_id,
-                    message=t('progress.settingOntology'),
-                    progress=15
-                )
-                builder.set_ontology(graph_id, ontology)
-                
-                # Add text (progress_callback signature is (msg, progress_ratio))
-                def add_progress_callback(msg, progress_ratio):
-                    progress = 15 + int(progress_ratio * 40)  # 15% - 55%
-                    task_manager.update_task(
-                        task_id,
-                        message=msg,
-                        progress=progress
-                    )
-                
-                task_manager.update_task(
-                    task_id,
-                    message=t('progress.addingChunks', count=total_chunks),
-                    progress=15
-                )
-                
-                episode_uuids = builder.add_text_batches(
-                    graph_id, 
-                    chunks,
-                    batch_size=3,
-                    progress_callback=add_progress_callback
-                )
-                
-                # Wait for Zep processing to complete (query the processed status of each episode)
-                task_manager.update_task(
-                    task_id,
-                    message=t('progress.waitingZepProcess'),
-                    progress=55
-                )
-                
-                def wait_progress_callback(msg, progress_ratio):
-                    progress = 55 + int(progress_ratio * 35)  # 55% - 90%
-                    task_manager.update_task(
-                        task_id,
-                        message=msg,
-                        progress=progress
-                    )
-                
-                builder._wait_for_episodes(episode_uuids, wait_progress_callback)
-                
-                # Get map data
-                task_manager.update_task(
-                    task_id,
-                    message=t('progress.fetchingGraphData'),
-                    progress=95
-                )
-                graph_data = builder.get_graph_data(graph_id)
-                
-                # Update project status
-                project.status = ProjectStatus.GRAPH_COMPLETED
-                ProjectManager.save_project(project)
-                
-                node_count = graph_data.get("node_count", 0)
-                edge_count = graph_data.get("edge_count", 0)
-                build_logger.info(f"[{task_id}] Graph build completed: graph_id={graph_id}, nodes={node_count}, edges={edge_count}")
-                
-                # Finish
-                task_manager.update_task(
-                    task_id,
-                    status=TaskStatus.COMPLETED,
-                    message=t('progress.graphBuildComplete'),
-                    progress=100,
-                    result={
-                        "project_id": project_id,
-                        "graph_id": graph_id,
-                        "node_count": node_count,
-                        "edge_count": edge_count,
-                        "chunk_count": total_chunks
-                    }
-                )
-                
-            except Exception as e:
-                # Update project status failed
-                build_logger.error(f"[{task_id}] Graph build failed: {str(e)}")
-                build_logger.debug(traceback.format_exc())
-                
-                project.status = ProjectStatus.FAILED
-                project.error = str(e)
-                ProjectManager.save_project(project)
-                
-                task_manager.update_task(
-                    task_id,
-                    status=TaskStatus.FAILED,
-                    message=t('progress.buildFailed', error=str(e)),
-                    error=traceback.format_exc()
-                )
-        
-        # Start background thread
-        thread = threading.Thread(target=build_task, daemon=True)
-        thread.start()
-        
         return jsonify({
             "success": True,
             "data": {
                 "project_id": project_id,
-                "task_id": task_id,
-                "message": t('api.graphBuildStarted', taskId=task_id)
+                "task_id": None,
+                "message": "Graph build is skipped in local mode.",
+                "graph_id": project.graph_id,
+                "node_count": 0,
+                "edge_count": 0,
+                "chunk_count": 0
             }
         })
         
@@ -585,24 +418,15 @@ def get_graph_data(graph_id: str):
     Get graph data (nodes and edges)
     """
     try:
-        if not _is_zep_graph_mode():
-            return jsonify({
-                "success": True,
-                "data": {
-                    "graph_id": graph_id,
-                    "nodes": [],
-                    "edges": [],
-                    "node_count": 0,
-                    "edge_count": 0
-                }
-            })
-        
-        builder = GraphBuilderService(api_key=Config.ZEP_API_KEY)
-        graph_data = builder.get_graph_data(graph_id)
-        
         return jsonify({
             "success": True,
-            "data": graph_data
+            "data": {
+                "graph_id": graph_id,
+                "nodes": [],
+                "edges": [],
+                "node_count": 0,
+                "edge_count": 0
+            }
         })
         
     except Exception as e:
@@ -616,22 +440,13 @@ def get_graph_data(graph_id: str):
 @graph_bp.route('/delete/<graph_id>', methods=['DELETE'])
 def delete_graph(graph_id: str):
     """
-    Delete Zep map
+    Delete map
     """
     try:
-        if not _is_zep_graph_mode():
-            return jsonify({
-                "success": False,
-                "error": "Graph deletion is unavailable because graph mode is disabled."
-            }), 400
-        
-        builder = GraphBuilderService(api_key=Config.ZEP_API_KEY)
-        builder.delete_graph(graph_id)
-        
         return jsonify({
-            "success": True,
-            "message": t('api.graphDeleted', id=graph_id)
-        })
+            "success": False,
+            "error": "Graph deletion is unavailable because graph mode is disabled."
+        }), 400
         
     except Exception as e:
         return jsonify({

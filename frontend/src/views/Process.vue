@@ -317,7 +317,7 @@
               <div class="detail-section">
                 <div class="detail-label">API Notes</div>
                 <div class="detail-content">
-                  Based on the ontology, documents are chunked and sent to Zep to build a knowledge graph and extract entities and relations.
+                  Based on the ontology, documents are chunked to build a knowledge graph and extract entities and relations.
                 </div>
               </div>
               

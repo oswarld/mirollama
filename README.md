@@ -291,7 +291,6 @@ For stronger workstations or servers, use:
    # Search provider
    # none: offline local mode
    # searxng: self-hosted web search
-   # zep: Zep Cloud graph memory
    SEARCH_PROVIDER=none
    SEARXNG_BASE_URL=
    WEB_SEARCH_LANGUAGE=ko-KR
@@ -359,26 +358,6 @@ SEARXNG_BASE_URL=http://localhost:8080
 Use SearXNG mode when you want to connect mirollama with a self-hosted search engine.
 
 This can help simulations incorporate external search results while still avoiding commercial search APIs.
-
----
-
-### Zep graph mode
-
-```dotenv
-SEARCH_PROVIDER=zep
-ZEP_API_KEY=your_zep_api_key_here
-```
-
-Use Zep mode when you want entity graph memory and relationship-aware simulations.
-
-Zep mode can help mirollama:
-
-* Build an entity graph from documents
-* Store relationships between entities
-* Retrieve graph-based context
-* Improve agent grounding
-
-This mode is optional.
 
 ---
 
