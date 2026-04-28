@@ -686,6 +686,23 @@ For general local testing, use:
 
 gpt-oss:20b
 
+Optional persona datasets by country
+
+If you need country-specific persona datasets, download them from Hugging Face and keep them local.
+
+Example:
+
+* Korea: https://huggingface.co/datasets/nvidia/Nemotron-Personas-Korea
+
+Recommended local path:
+
+* `Nemotron-Personas-Korea/`
+
+Important:
+
+* Do not commit `.arrow` files to Git.
+* Keep large dataset files in local cache/storage only.
+
 ⸻
 
 Roadmap
