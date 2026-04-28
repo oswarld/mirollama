@@ -1,218 +1,733 @@
 # mirollama
 
-Local-first multi-agent simulation and prediction engine.
+<p align="center">
+  <a href="https://github.com/oswarld/mirollama/stargazers"><img src="https://img.shields.io/github/stars/oswarld/mirollama?style=flat-square&color=yellow" alt="stars" /></a>
+  <a href="https://github.com/oswarld/mirollama/watchers"><img src="https://img.shields.io/github/watchers/oswarld/mirollama?style=flat-square&color=blue" alt="watchers" /></a>
+  <a href="https://github.com/oswarld/mirollama/network/members"><img src="https://img.shields.io/github/forks/oswarld/mirollama?style=flat-square&color=blue" alt="forks" /></a>
+  <img src="https://img.shields.io/badge/Docker-Build-blue?style=flat-square&logo=docker" alt="docker" />
+</p>
 
-## Project Origin
+<p align="center">
+  <a href="https://x.com/oswarld_oz"><img src="https://img.shields.io/badge/X-Follow-black?style=flat-square&logo=x" alt="X" /></a>
+  <a href="https://linkedin.com/in/oswarld"><img src="https://img.shields.io/badge/LinkedIn-Follow-blue?style=flat-square&logo=linkedin" alt="LinkedIn" /></a>
+</p>
 
-This project is a derivative work of:
+<p align="center">
+  <a href="README.md">English</a> | <a href="README_ZH.md">中文文档</a> | <a href="README_KO.md">한국어 가이드</a>
+</p>
 
-- Upstream: `https://github.com/666ghj/MiroFish.git`
-- Target repository: `https://github.com/oswarld/mirollama`
+**Local-first scenario simulation with AI agents.**
+mirollama is a local-first AI agent simulation workbench that turns your documents into scenario-based simulations.
+Upload documents, describe a situation, and let local LLM-powered agents simulate how different stakeholders may react.
+> mirollama is not a chatbot.  
+> It is a scenario lab.
+---
+## What is mirollama?
+mirollama helps you explore possible reactions, narratives, conflicts, and stakeholder dynamics before they happen.
+Instead of asking one AI model for a single answer, mirollama creates multiple AI agents from your documents and lets them interact inside a simulated environment.
+You can use mirollama to explore questions like:
+- How might customers react to a new product launch?
+- How might students, professors, and administrators respond to a new university policy?
+- How might different communities react to a controversial announcement?
+- How might internal teams interpret a strategic memo?
+- How might public opinion evolve around a market, policy, or social issue?
+mirollama is designed for people who want to test scenarios, not just generate text.
+---
+## Core idea
+Most AI tools answer a question.
+mirollama helps you simulate a situation.
+The basic workflow is simple:
+```text
+Documents + Scenario
+        ↓
+Ontology generation
+        ↓
+Agent profile generation
+        ↓
+Multi-agent simulation
+        ↓
+Report and insights
 
-This repository is tuned for the easiest onboarding path:
+You provide the context.
 
-- Run a local Ollama model
-- Clone the repo
-- Install dependencies
-- Start both services
+mirollama builds the simulation environment.
 
-No paid API key is required for the default local setup.
+⸻
 
-## What You Get
+How it works
 
-- Frontend UI (Vite + Vue) for graph build, simulation, report, and interaction
-- Flask backend APIs for simulation workflows
-- Local-first LLM execution through Ollama's OpenAI-compatible endpoint
-- Optional search providers (`none`, `searxng`, `zep`)
+1. Upload documents
 
-## Architecture
+Upload PDFs, Markdown files, or plain text documents.
 
-- Frontend: `frontend` (Vite dev server, default port `3000`)
-- Backend: `backend` (Flask API, default port `5001`)
-- Root scripts: install and run frontend/backend together
-- Shared env file: root `.env` (loaded by backend)
+These documents may include:
 
-## Prerequisites
+* Policy drafts
+* Market reports
+* Product briefs
+* Research notes
+* Meeting summaries
+* Community posts
+* News articles
+* Internal strategy documents
 
-Install these first:
+2. Describe the simulation scenario
 
-- Node.js `>=18`
-- Python `>=3.11`
-- `uv` (Python package/dependency runner)
-- Ollama (running locally)
-
-Quick checks:
-
-```bash
-node -v
-python --version
-uv --version
-ollama --version
-```
-
-## Fastest Onboarding (Recommended)
-
-### 1) Clone
-
-```bash
-git clone https://github.com/oswarld/mirollama.git mirollama
-cd mirollama
-```
-
-### 2) Start Ollama And Pull A Model
-
-Use one model that exists in `.env.example`:
-
-- `gpt-oss:120b`
-- `gpt-oss:20b`
-- `gemma4:31b`
-- `gemma4:26b`
+Tell mirollama what you want to simulate.
 
 Example:
 
-```bash
+Simulate how students, professors, administrators, and media might react if a university introduces a strict AI usage policy.
+
+3. Generate ontology
+
+mirollama analyzes the uploaded documents and extracts important entity types, stakeholder types, and relationships.
+
+For example:
+
+Entity types:
+- Student
+- Professor
+- Administrator
+- Journalist
+- Parent
+- Online community member
+Relationship types:
+- supports
+- criticizes
+- influences
+- reports_on
+- reacts_to
+
+4. Create agent profiles
+
+mirollama turns extracted entities and stakeholder types into AI agent profiles.
+
+Each agent can have:
+
+* Role
+* Background
+* Motivation
+* Beliefs
+* Memory
+* Behavioral tendency
+
+5. Run simulation
+
+Agents interact in a social-media-like environment inspired by Twitter and Reddit dynamics.
+
+They may:
+
+* Create posts
+* Comment
+* Like or dislike
+* Repost
+* Follow
+* React to other agents
+* Shift opinions over time
+
+6. Generate report
+
+mirollama summarizes what happened during the simulation.
+
+The report may include:
+
+* Key narratives
+* Emerging conflicts
+* Stakeholder reactions
+* Risk signals
+* Possible opportunities
+* Summary insights
+
+⸻
+
+Why local-first?
+
+Many scenario simulations involve sensitive information.
+
+You may want to test ideas using:
+
+* Internal documents
+* Unreleased strategies
+* Research materials
+* Client data
+* Policy drafts
+* Private notes
+
+mirollama is designed to work with local LLMs through Ollama by default.
+
+This means:
+
+* No mandatory cloud LLM API
+* Better privacy for sensitive documents
+* Local experimentation
+* OpenAI-compatible local endpoint support
+* Optional integration with external graph/search tools
+
+⸻
+
+Recommended models
+
+mirollama works best with larger and more capable local models.
+
+We currently recommend the following Ollama models for best performance:
+
+gpt-oss:120b
+gpt-oss:20b
+gemma4:31b
+gemma4:26b
+
+Best quality
+
+ollama pull gpt-oss:120b
+
+Recommended for high-quality ontology generation, agent profile creation, and detailed report generation.
+
+Use this if you have enough local compute resources.
+
+Balanced option
+
 ollama pull gpt-oss:20b
-```
 
-Ollama endpoint expected by default:
+Recommended as the practical default for most users.
 
-- `http://localhost:11434/v1`
+It offers a good balance between reasoning quality and local usability.
 
-### 3) Configure `.env`
+Alternative models
 
-Copy defaults:
+ollama pull gemma4:31b
+ollama pull gemma4:26b
 
-```bash
+These models can also be used when you want strong local performance with a different model family.
+
+⸻
+
+System requirements
+
+Recommended environment:
+
+* Node.js 18+
+* Python 3.11+
+* uv
+* Ollama
+* Sufficient RAM/VRAM for the selected model
+
+Model requirements vary depending on the model size.
+
+For smaller local machines, start with:
+
+gpt-oss:20b
+
+For stronger workstations or servers, use:
+
+gpt-oss:120b
+
+⸻
+
+Quick start
+
+1. Install Ollama
+
+Install Ollama from:
+
+https://ollama.com
+
+Then pull one of the recommended models.
+
+Example:
+
+ollama pull gpt-oss:20b
+
+Make sure Ollama is running:
+
+ollama serve
+
+By default, Ollama provides an OpenAI-compatible endpoint at:
+
+http://localhost:11434/v1
+
+⸻
+
+2. Clone the repository
+
+git clone https://github.com/oswarld/mirollama.git
+cd mirollama
+
+⸻
+
+3. Configure environment
+
+Copy the example environment file:
+
 cp .env.example .env
-```
 
-Default mode is fully local/offline-friendly:
+Example .env configuration:
 
-- `LLM_BASE_URL=http://localhost:11434/v1`
-- `SEARCH_PROVIDER=none`
-- `LLM_API_KEY` can stay unset for local Ollama
-
-Only change `LLM_MODEL_NAME` if you pulled a different model tag.
-
-### 4) Install Dependencies
-
-One command:
-
-```bash
-npm run setup:all
-```
-
-Equivalent step-by-step:
-
-```bash
-npm run setup
-npm run setup:backend
-```
-
-### 5) Run
-
-```bash
-npm run dev
-```
-
-Services:
-
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:5001`
-- Health check: `http://localhost:5001/health`
-
-## Optional Modes
-
-### Use SearXNG For Web Search
-
-Set in `.env`:
-
-```env
-SEARCH_PROVIDER=searxng
-SEARXNG_BASE_URL=http://localhost:8080
+# Local-first defaults
+LLM_BASE_URL=http://localhost:11434/v1
+# Recommended models:
+# gpt-oss:120b
+# gpt-oss:20b
+# gemma4:31b
+# gemma4:26b
+LLM_MODEL_NAME=gpt-oss:20b
+# LLM_API_KEY is optional for local Ollama.
+# If unset, the backend will use local Ollama mode.
+# LLM_API_KEY=ollama
+# Search provider
+# none: offline local mode
+# searxng: self-hosted web search
+# zep: Zep Cloud graph memory
+SEARCH_PROVIDER=none
+SEARXNG_BASE_URL=
 WEB_SEARCH_LANGUAGE=ko-KR
 WEB_SEARCH_LIMIT=10
-```
+# Optional Zep Cloud API key
+# ZEP_API_KEY=your_zep_api_key_here
 
-### Use Zep Cloud
+⸻
 
-Set in `.env`:
+4. Install dependencies
 
-```env
+Install frontend and backend dependencies:
+
+npm run setup:all
+
+This command installs:
+
+* Root Node dependencies
+* Frontend dependencies
+* Backend Python dependencies through uv
+
+⸻
+
+5. Run mirollama
+
+npm run dev
+
+This starts both the backend and frontend.
+
+Frontend:
+
+http://localhost:3000
+
+Backend:
+
+http://localhost:5001
+
+Health check:
+
+http://localhost:5001/health
+
+⸻
+
+Available scripts
+
+npm run setup
+
+Install root and frontend dependencies.
+
+npm run setup:backend
+
+Install backend dependencies with uv.
+
+npm run setup:all
+
+Install all dependencies.
+
+npm run dev
+
+Run frontend and backend together.
+
+npm run backend
+
+Run backend only.
+
+npm run frontend
+
+Run frontend only.
+
+npm run build
+
+Build frontend for production.
+
+⸻
+
+Local mode vs Graph mode
+
+mirollama supports multiple operating modes.
+
+⸻
+
+Local mode
+
+Local mode is the default mode.
+
+SEARCH_PROVIDER=none
+
+In local mode, mirollama uses your uploaded documents and local LLM to generate simulation artifacts.
+
+Use local mode when you want:
+
+* Simple setup
+* Local-first experimentation
+* No external graph memory
+* No cloud dependency
+* Private document-based simulation
+
+This is the recommended starting point.
+
+⸻
+
+SearXNG mode
+
+SEARCH_PROVIDER=searxng
+SEARXNG_BASE_URL=http://localhost:8080
+
+Use SearXNG mode when you want to connect mirollama with a self-hosted search engine.
+
+This can help simulations incorporate external search results while still avoiding commercial search APIs.
+
+⸻
+
+Zep graph mode
+
 SEARCH_PROVIDER=zep
 ZEP_API_KEY=your_zep_api_key_here
-```
 
-`ZEP_API_KEY` is required only when `SEARCH_PROVIDER=zep`.
+Use Zep mode when you want entity graph memory and relationship-aware simulations.
 
-### Run Services Separately
+Zep mode can help mirollama:
 
-```bash
-npm run backend
-npm run frontend
-```
+* Build an entity graph from documents
+* Store relationships between entities
+* Retrieve graph-based context
+* Improve agent grounding
 
-## Docker
+This mode is optional.
 
-The repository includes `docker-compose.yml`:
+⸻
 
-```bash
-cp .env.example .env
+Example use cases
+
+1. Product launch simulation
+
+Upload:
+
+* Product brief
+* Customer research
+* Pricing document
+* Competitor analysis
+
+Scenario:
+
+Simulate how early adopters, enterprise buyers, competitors, and influencers might react to a new AI productivity tool launch.
+
+Possible output:
+
+* Customer excitement and objections
+* Pricing sensitivity
+* Competitor narrative
+* Risk signals
+* Go-to-market insights
+
+⸻
+
+2. Policy reaction simulation
+
+Upload:
+
+* Policy draft
+* Public survey
+* News articles
+* Stakeholder statements
+
+Scenario:
+
+Simulate public reaction to a new government AI regulation policy.
+
+Possible output:
+
+* Supporter narratives
+* Critic concerns
+* Media framing
+* Online community reactions
+* Political and social risks
+
+⸻
+
+3. University AI policy simulation
+
+Upload:
+
+* AI usage policy
+* Student survey
+* Faculty meeting notes
+* Academic integrity guidelines
+
+Scenario:
+
+Simulate how students, professors, teaching assistants, and administrators might react to a strict AI assignment policy.
+
+Possible output:
+
+* Student fairness concerns
+* Faculty disagreement
+* Administrative risk management
+* Media controversy potential
+* Suggested communication strategy
+
+⸻
+
+4. Market narrative simulation
+
+Upload:
+
+* Analyst reports
+* Company announcement
+* Industry news
+* Community discussions
+
+Scenario:
+
+Simulate how investors, analysts, retail traders, and media might react to a major strategic announcement.
+
+Possible output:
+
+* Bullish and bearish narratives
+* Misinterpretation risks
+* Information gaps
+* Narrative shift over time
+
+⸻
+
+Project structure
+
+mirollama
+├── backend
+│   ├── app
+│   │   ├── api
+│   │   ├── models
+│   │   ├── services
+│   │   └── utils
+│   ├── scripts
+│   ├── uploads
+│   └── run.py
+│
+├── frontend
+│   ├── src
+│   │   ├── views
+│   │   ├── router
+│   │   ├── components
+│   │   └── services
+│   └── package.json
+│
+├── docker-compose.yml
+├── package.json
+└── README.md
+
+⸻
+
+Backend overview
+
+The backend is built with Flask.
+
+Core API groups:
+
+/api/graph
+/api/simulation
+/api/report
+
+Main responsibilities:
+
+* File upload
+* Text extraction
+* Ontology generation
+* Graph construction
+* Agent profile generation
+* Simulation preparation
+* Simulation execution
+* Report generation
+
+⸻
+
+Frontend overview
+
+The frontend is built with Vue 3 and Vite.
+
+Main views include:
+
+* Home
+* Process
+* Simulation
+* Simulation Run
+* Report
+* Interaction
+
+The frontend is designed as a workflow interface for moving from documents to simulation results.
+
+⸻
+
+Docker
+
+A Docker Compose configuration is included.
+
 docker compose up -d
-```
 
-Published ports:
+Default ports:
 
-- `3000` (frontend)
-- `5001` (backend)
+Frontend: 3000
+Backend: 5001
 
-## Troubleshooting
+Uploaded files and generated artifacts are mounted to:
 
-### `uv: command not found`
+./backend/uploads
 
-Install `uv`, then rerun:
+Note: depending on the current image configuration, Docker may use the upstream MiroFish image. If you are developing mirollama directly, running from source is recommended.
 
-```bash
-npm run setup:backend
-```
+⸻
 
-### Backend fails with `LLM_API_KEY is not configured`
+API overview
 
-You are likely using a non-local LLM endpoint.
+Health check
 
-- For Ollama: keep `LLM_BASE_URL` as `http://localhost:11434/v1`
-- For cloud endpoint: set `LLM_API_KEY` in `.env`
+GET /health
 
-### Backend starts but generation fails
+Generate ontology
 
-Usually model tag mismatch.
+POST /api/graph/ontology/generate
 
-- Check your pulled models: `ollama list`
-- Ensure `.env` `LLM_MODEL_NAME` matches exactly
+Upload documents and generate ontology definitions.
 
-### Port already in use
+Build graph
 
-Free ports `3000` / `5001`, or override:
+POST /api/graph/build
 
-- Backend: `FLASK_PORT=<new_port>`
-- Frontend API target: `VITE_API_BASE_URL=http://localhost:<backend_port>`
+Build or prepare graph data from generated ontology.
 
-## Tech Stack
+Create simulation
 
-- Frontend: Vue 3, Vite, Vue Router, Vue i18n, Axios, D3
-- Backend: Flask, OpenAI SDK-compatible client, CAMEL/OASIS dependencies
-- Runtime model provider: Ollama (default), or any OpenAI-compatible API
+POST /api/simulation/create
 
-## License And Attribution
+Create a simulation from a project.
 
-- This project is licensed under the MIT License (see `LICENSE`).
-- This repository is a derivative work based on `666ghj/MiroFish`.
-- Upstream repository: `https://github.com/666ghj/MiroFish.git`
-- Current repository: `https://github.com/oswarld/mirollama`
-- Derivative notices and attribution details: `NOTICE`
+Prepare simulation
 
-## Notes For Contributors
+POST /api/simulation/prepare
 
-- Keep root `.env` as the single source for runtime config
-- Preserve local-first defaults unless explicitly changing product direction
-- If you change setup scripts or env keys, update this README in the same PR
+Generate agent profiles and simulation configuration.
+
+Run simulation
+
+Simulation execution depends on the generated simulation files and runner configuration.
+
+Generate report
+
+POST /api/report
+
+Generate a report from simulation results.
+
+⸻
+
+Recommended first test
+
+If this is your first time running mirollama, try the following setup:
+
+LLM_BASE_URL=http://localhost:11434/v1
+LLM_MODEL_NAME=gpt-oss:20b
+SEARCH_PROVIDER=none
+WEB_SEARCH_LANGUAGE=ko-KR
+
+Then upload a short Markdown or text file and use a simple scenario such as:
+
+Simulate how different stakeholders might react to this announcement.
+
+For best results, include documents that clearly describe:
+
+* The situation
+* The stakeholders
+* The conflict or decision
+* The expected environment
+* The purpose of the simulation
+
+⸻
+
+Tips for better simulations
+
+Use specific scenarios
+
+Less effective:
+
+Analyze this document.
+
+More effective:
+
+Simulate how customers, competitors, and media might react if this product launches at a higher price than expected.
+
+Upload context-rich documents
+
+Better simulations come from better context.
+
+Good documents include:
+
+* Background information
+* Stakeholder descriptions
+* Conflicting opinions
+* Prior events
+* Market or social context
+
+Use stronger models for complex simulations
+
+For complex documents and nuanced scenarios, use:
+
+gpt-oss:120b
+
+For general local testing, use:
+
+gpt-oss:20b
+
+⸻
+
+Roadmap
+
+Planned improvements:
+
+* Live demo page
+* Better local-only entity extraction
+* More example simulation templates
+* Improved report visualization
+* Better Korean-language simulation examples
+* Built-in demo datasets
+* More simulation environments
+* Cleaner Docker image under the mirollama namespace
+* Exportable reports
+* Scenario comparison mode
+
+⸻
+
+Security note
+
+mirollama is designed for local-first experimentation.
+
+If you expose the backend to the public internet, make sure to configure:
+
+* Authentication
+* CORS
+* Secret key
+* Upload limits
+* File validation
+* Network restrictions
+
+Do not expose sensitive documents through an unsecured public deployment.
+
+⸻
+
+License
+
+MIT
+
+⸻
+
+Credits
+
+mirollama is a derivative work based on MiroFish by 666ghj.

@@ -44,7 +44,7 @@
         <div class="hero-right">
           <!-- Logo area -->
           <div class="logo-container">
-            <img src="../assets/logo/mirollama_logo_left.jpeg" alt="mirollama Logo" class="hero-logo" />
+            <img src="/mirollama.png" alt="mirollama Logo" class="hero-logo" />
           </div>
           
           <button class="scroll-down-btn" @click="scrollToBottom">
