@@ -204,7 +204,21 @@ These models can also be used when you want strong local performance with a diff
 
 System requirements
 
-Recommended environment:
+### Minimum & Recommended Specifications
+
+**macOS**
+* **Minimum:** Apple Silicon (M1/M2/M3) with 16GB Unified Memory or Intel Mac with 32GB RAM.
+* **Recommended:** Apple Silicon (M1/M2/M3 Max/Ultra) with 32GB+ Unified Memory for larger models (e.g., 30B+).
+
+**Windows**
+* **Minimum:** Windows 10/11, Intel i5 / AMD Ryzen 5, 16GB RAM, NVIDIA GPU with 8GB VRAM (RTX 3060 or equivalent).
+* **Recommended:** Windows 11, Intel i7 / AMD Ryzen 7, 32GB+ RAM, NVIDIA GPU with 16GB+ VRAM (RTX 4080/4090 or equivalent) for optimal local LLM performance.
+
+**Linux**
+* **Minimum:** Ubuntu 20.04+, 16GB RAM, NVIDIA GPU with 8GB VRAM.
+* **Recommended:** Ubuntu 22.04+, 32GB+ RAM, NVIDIA GPU with 16GB+ VRAM, CUDA toolkit installed.
+
+### Software Prerequisites:
 
 * Node.js 18+
 * Python 3.11+
