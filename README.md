@@ -22,6 +22,46 @@ Upload documents, describe a situation, and let local LLM-powered agents simulat
 > mirollama is not a chatbot.  
 > It is a scenario lab.
 ---
+## Quickstart
+
+### Prerequisites
+- Node.js >= 18 (recommended: 20+)
+- Python (for the backend) and `uv` installed
+
+### Run (dev)
+```bash
+npm run setup:all
+npm run dev
+```
+
+### Run (frontend only)
+```bash
+npm run setup
+npm run frontend
+```
+
+## Repository layout
+- `backend/`: Python backend (run via `uv`)
+- `frontend/`: main web app UI
+- `local-fund-demo/`: static Next.js demo console grounded by `local_100M.pdf`
+- `persona-dashboard/`: supporting UI tooling (if applicable)
+
+## Demos
+
+### Local fund demo (static)
+The `local-fund-demo/` package is a self-contained static demo to showcase the end-to-end “pipeline narrative” (graph build → personas → simulation → report) using a fixed source PDF.
+
+```bash
+cd local-fund-demo
+npm install
+npm run dev
+```
+
+Open:
+- `http://localhost:3000/` (landing)
+- `http://localhost:3000/console` (live console)
+- `http://localhost:3000/local_100M.pdf` (source document)
+
 ## What is mirollama?
 mirollama helps you explore possible reactions, narratives, conflicts, and stakeholder dynamics before they happen.
 Instead of asking one AI model for a single answer, mirollama creates multiple AI agents from your documents and lets them interact inside a simulated environment.
@@ -47,168 +87,144 @@ Agent profile generation
 Multi-agent simulation
         ↓
 Report and insights
+```
 
-You provide the context.
+You provide the context. mirollama builds the simulation environment.
 
-mirollama builds the simulation environment.
+---
 
-⸻
+## How it works
 
-How it works
+1. Upload documents  
+   Upload PDFs, Markdown files, or plain text documents.
 
-1. Upload documents
+   These documents may include:
+   - Policy drafts
+   - Market reports
+   - Product briefs
+   - Research notes
+   - Meeting summaries
+   - Community posts
+   - News articles
+   - Internal strategy documents
 
-Upload PDFs, Markdown files, or plain text documents.
+2. Describe the simulation scenario  
+   Tell mirollama what you want to simulate.
 
-These documents may include:
+   Example:
+   - Simulate how students, professors, administrators, and media might react if a university introduces a strict AI usage policy.
 
-* Policy drafts
-* Market reports
-* Product briefs
-* Research notes
-* Meeting summaries
-* Community posts
-* News articles
-* Internal strategy documents
+3. Generate ontology  
+   mirollama analyzes the uploaded documents and extracts important entity types, stakeholder types, and relationships.
 
-2. Describe the simulation scenario
+   For example:
+   - Entity types:
+     - Student
+     - Professor
+     - Administrator
+     - Journalist
+     - Parent
+     - Online community member
+   - Relationship types:
+     - supports
+     - criticizes
+     - influences
+     - reports_on
+     - reacts_to
 
-Tell mirollama what you want to simulate.
+4. Create agent profiles  
+   mirollama turns extracted entities and stakeholder types into AI agent profiles.
 
-Example:
+   Each agent can have:
+   - Role
+   - Background
+   - Motivation
+   - Beliefs
+   - Memory
+   - Behavioral tendency
 
-Simulate how students, professors, administrators, and media might react if a university introduces a strict AI usage policy.
+5. Run simulation  
+   Agents interact in a social-media-like environment inspired by Twitter and Reddit dynamics.
 
-3. Generate ontology
+   They may:
+   - Create posts
+   - Comment
+   - Like or dislike
+   - Repost
+   - Follow
+   - React to other agents
+   - Shift opinions over time
 
-mirollama analyzes the uploaded documents and extracts important entity types, stakeholder types, and relationships.
+6. Generate report  
+   mirollama summarizes what happened during the simulation.
 
-For example:
+   The report may include:
+   - Key narratives
+   - Emerging conflicts
+   - Stakeholder reactions
+   - Risk signals
+   - Possible opportunities
+   - Summary insights
 
-Entity types:
-- Student
-- Professor
-- Administrator
-- Journalist
-- Parent
-- Online community member
-Relationship types:
-- supports
-- criticizes
-- influences
-- reports_on
-- reacts_to
+---
 
-4. Create agent profiles
-
-mirollama turns extracted entities and stakeholder types into AI agent profiles.
-
-Each agent can have:
-
-* Role
-* Background
-* Motivation
-* Beliefs
-* Memory
-* Behavioral tendency
-
-5. Run simulation
-
-Agents interact in a social-media-like environment inspired by Twitter and Reddit dynamics.
-
-They may:
-
-* Create posts
-* Comment
-* Like or dislike
-* Repost
-* Follow
-* React to other agents
-* Shift opinions over time
-
-6. Generate report
-
-mirollama summarizes what happened during the simulation.
-
-The report may include:
-
-* Key narratives
-* Emerging conflicts
-* Stakeholder reactions
-* Risk signals
-* Possible opportunities
-* Summary insights
-
-⸻
-
-Why local-first?
-
+## Why local-first?
 Many scenario simulations involve sensitive information.
 
 You may want to test ideas using:
-
-* Internal documents
-* Unreleased strategies
-* Research materials
-* Client data
-* Policy drafts
-* Private notes
+- Internal documents
+- Unreleased strategies
+- Research materials
+- Client data
+- Policy drafts
+- Private notes
 
 mirollama is designed to work with local LLMs through Ollama by default.
 
 This means:
+- No mandatory cloud LLM API
+- Better privacy for sensitive documents
+- Local experimentation
+- OpenAI-compatible local endpoint support
+- Optional integration with external graph/search tools
 
-* No mandatory cloud LLM API
-* Better privacy for sensitive documents
-* Local experimentation
-* OpenAI-compatible local endpoint support
-* Optional integration with external graph/search tools
+---
 
-⸻
-
-Recommended models
-
+## Recommended models
 mirollama works best with larger and more capable local models.
 
 We currently recommend the following Ollama models for best performance:
+- `gpt-oss:120b`
+- `gpt-oss:20b`
+- `gemma4:31b`
+- `gemma4:26b`
 
-gpt-oss:120b
-gpt-oss:20b
-gemma4:31b
-gemma4:26b
-
-Best quality
-
+Best quality:
+```bash
 ollama pull gpt-oss:120b
+```
 
-Recommended for high-quality ontology generation, agent profile creation, and detailed report generation.
-
-Use this if you have enough local compute resources.
-
-Balanced option
-
+Balanced option:
+```bash
 ollama pull gpt-oss:20b
+```
 
-Recommended as the practical default for most users.
-
-It offers a good balance between reasoning quality and local usability.
-
-Alternative models
-
+Alternative models:
+```bash
 ollama pull gemma4:31b
 ollama pull gemma4:26b
+```
 
-These models can also be used when you want strong local performance with a different model family.
+---
 
-⸻
-
-System requirements
+## System requirements
 
 ### Minimum & Recommended Specifications
 
 **macOS**
 * **Minimum:** Apple Silicon (M1/M2/M3) with 16GB Unified Memory or Intel Mac with 32GB RAM.
 * **Recommended:** Apple Silicon (M1/M2/M3 Max/Ultra) with 32GB+ Unified Memory for larger models (e.g., 30B+).
+* **Note:** Apple Silicon can run local models via Metal. NVIDIA VRAM guidance below mainly applies to Windows/Linux.
 
 **Windows**
 * **Minimum:** Windows 10/11, Intel i5 / AMD Ryzen 5, 16GB RAM, NVIDIA GPU with 8GB VRAM (RTX 3060 or equivalent).
@@ -217,6 +233,7 @@ System requirements
 **Linux**
 * **Minimum:** Ubuntu 20.04+, 16GB RAM, NVIDIA GPU with 8GB VRAM.
 * **Recommended:** Ubuntu 22.04+, 32GB+ RAM, NVIDIA GPU with 16GB+ VRAM, CUDA toolkit installed.
+* **Note:** CPU-only works for small models but ontology + multi-agent simulation quality improves significantly with more VRAM.
 
 ### Software Prerequisites:
 
@@ -229,155 +246,94 @@ System requirements
 Model requirements vary depending on the model size.
 
 For smaller local machines, start with:
-
-gpt-oss:20b
+`gpt-oss:20b`
 
 For stronger workstations or servers, use:
+`gpt-oss:120b`
 
-gpt-oss:120b
+---
 
-⸻
+## Quick start (detailed)
 
-Quick start
+1. Install Ollama  
+   Install Ollama from: https://ollama.com
 
-1. Install Ollama
+   Pull a recommended model:
+   ```bash
+   ollama pull gpt-oss:20b
+   ```
 
-Install Ollama from:
+   Make sure Ollama is running:
+   ```bash
+   ollama serve
+   ```
 
-https://ollama.com
-
-Then pull one of the recommended models.
-
-Example:
-
-ollama pull gpt-oss:20b
-
-Make sure Ollama is running:
-
-ollama serve
-
-By default, Ollama provides an OpenAI-compatible endpoint at:
-
-http://localhost:11434/v1
-
-⸻
+   Default OpenAI-compatible endpoint:
+   - `http://localhost:11434/v1`
 
 2. Clone the repository
-
-git clone https://github.com/oswarld/mirollama.git
-cd mirollama
-
-⸻
+   ```bash
+   git clone https://github.com/oswarld/mirollama.git
+   cd mirollama
+   ```
 
 3. Configure environment
+   ```bash
+   cp .env.example .env
+   ```
 
-Copy the example environment file:
+   Example `.env` configuration:
+   ```dotenv
+   # Local-first defaults
+   LLM_BASE_URL=http://localhost:11434/v1
+   LLM_MODEL_NAME=gpt-oss:20b
 
-cp .env.example .env
-
-Example .env configuration:
-
-# Local-first defaults
-LLM_BASE_URL=http://localhost:11434/v1
-# Recommended models:
-# gpt-oss:120b
-# gpt-oss:20b
-# gemma4:31b
-# gemma4:26b
-LLM_MODEL_NAME=gpt-oss:20b
-# LLM_API_KEY is optional for local Ollama.
-# If unset, the backend will use local Ollama mode.
-# LLM_API_KEY=ollama
-# Search provider
-# none: offline local mode
-# searxng: self-hosted web search
-# zep: Zep Cloud graph memory
-SEARCH_PROVIDER=none
-SEARXNG_BASE_URL=
-WEB_SEARCH_LANGUAGE=ko-KR
-WEB_SEARCH_LIMIT=10
-# Optional Zep Cloud API key
-# ZEP_API_KEY=your_zep_api_key_here
-
-⸻
+   # Search provider
+   # none: offline local mode
+   # searxng: self-hosted web search
+   # zep: Zep Cloud graph memory
+   SEARCH_PROVIDER=none
+   SEARXNG_BASE_URL=
+   WEB_SEARCH_LANGUAGE=ko-KR
+   WEB_SEARCH_LIMIT=10
+   ```
 
 4. Install dependencies
-
-Install frontend and backend dependencies:
-
-npm run setup:all
-
-This command installs:
-
-* Root Node dependencies
-* Frontend dependencies
-* Backend Python dependencies through uv
-
-⸻
+   ```bash
+   npm run setup:all
+   ```
 
 5. Run mirollama
+   ```bash
+   npm run dev
+   ```
 
-npm run dev
+   - Frontend: `http://localhost:3000`
+   - Backend: `http://localhost:5001`
+   - Health check: `http://localhost:5001/health`
 
-This starts both the backend and frontend.
+---
 
-Frontend:
+## Available scripts
+ - `npm run setup`: Install root and frontend dependencies.
+ - `npm run setup:backend`: Install backend dependencies with `uv`.
+ - `npm run setup:all`: Install all dependencies.
+ - `npm run dev`: Run frontend and backend together.
+ - `npm run backend`: Run backend only.
+ - `npm run frontend`: Run frontend only.
+ - `npm run build`: Build frontend for production.
 
-http://localhost:3000
+---
 
-Backend:
-
-http://localhost:5001
-
-Health check:
-
-http://localhost:5001/health
-
-⸻
-
-Available scripts
-
-npm run setup
-
-Install root and frontend dependencies.
-
-npm run setup:backend
-
-Install backend dependencies with uv.
-
-npm run setup:all
-
-Install all dependencies.
-
-npm run dev
-
-Run frontend and backend together.
-
-npm run backend
-
-Run backend only.
-
-npm run frontend
-
-Run frontend only.
-
-npm run build
-
-Build frontend for production.
-
-⸻
-
-Local mode vs Graph mode
-
+## Modes
 mirollama supports multiple operating modes.
 
-⸻
-
-Local mode
-
+### Local mode
 Local mode is the default mode.
 
+```dotenv
 SEARCH_PROVIDER=none
+```
 
 In local mode, mirollama uses your uploaded documents and local LLM to generate simulation artifacts.
 
@@ -391,23 +347,27 @@ Use local mode when you want:
 
 This is the recommended starting point.
 
-⸻
+---
 
-SearXNG mode
+### SearXNG mode
 
+```dotenv
 SEARCH_PROVIDER=searxng
 SEARXNG_BASE_URL=http://localhost:8080
+```
 
 Use SearXNG mode when you want to connect mirollama with a self-hosted search engine.
 
 This can help simulations incorporate external search results while still avoiding commercial search APIs.
 
-⸻
+---
 
-Zep graph mode
+### Zep graph mode
 
+```dotenv
 SEARCH_PROVIDER=zep
 ZEP_API_KEY=your_zep_api_key_here
+```
 
 Use Zep mode when you want entity graph memory and relationship-aware simulations.
 
@@ -420,11 +380,11 @@ Zep mode can help mirollama:
 
 This mode is optional.
 
-⸻
+---
 
-Example use cases
+## Example use cases
 
-1. Product launch simulation
+### 1. Product launch simulation
 
 Upload:
 
@@ -445,9 +405,9 @@ Possible output:
 * Risk signals
 * Go-to-market insights
 
-⸻
+---
 
-2. Policy reaction simulation
+### 2. Policy reaction simulation
 
 Upload:
 
@@ -468,9 +428,9 @@ Possible output:
 * Online community reactions
 * Political and social risks
 
-⸻
+---
 
-3. University AI policy simulation
+### 3. University AI policy simulation
 
 Upload:
 
@@ -491,9 +451,9 @@ Possible output:
 * Media controversy potential
 * Suggested communication strategy
 
-⸻
+---
 
-4. Market narrative simulation
+### 4. Market narrative simulation
 
 Upload:
 
@@ -513,10 +473,11 @@ Possible output:
 * Information gaps
 * Narrative shift over time
 
-⸻
+---
 
-Project structure
+## Project structure
 
+```text
 mirollama
 ├── backend
 │   ├── app
@@ -539,18 +500,20 @@ mirollama
 ├── docker-compose.yml
 ├── package.json
 └── README.md
+```
 
-⸻
+---
 
-Backend overview
+## Backend overview
 
 The backend is built with Flask.
 
 Core API groups:
-
+```text
 /api/graph
 /api/simulation
 /api/report
+```
 
 Main responsibilities:
 
@@ -563,9 +526,9 @@ Main responsibilities:
 * Simulation execution
 * Report generation
 
-⸻
+---
 
-Frontend overview
+## Frontend overview
 
 The frontend is built with Vue 3 and Vite.
 
@@ -580,18 +543,18 @@ Main views include:
 
 The frontend is designed as a workflow interface for moving from documents to simulation results.
 
-⸻
+---
 
-Docker
+## Docker
 
 A Docker Compose configuration is included.
-
+```bash
 docker compose up -d
+```
 
 Default ports:
-
-Frontend: 3000
-Backend: 5001
+- Frontend: `3000`
+- Backend: `5001`
 
 Uploaded files and generated artifacts are mounted to:
 
@@ -599,58 +562,27 @@ Uploaded files and generated artifacts are mounted to:
 
 Note: depending on the current image configuration, Docker may use the upstream MiroFish image. If you are developing mirollama directly, running from source is recommended.
 
-⸻
+---
 
-API overview
+## API overview
+- Health check: `GET /health`
+- Generate ontology: `POST /api/graph/ontology/generate`
+- Build graph: `POST /api/graph/build`
+- Create simulation: `POST /api/simulation/create`
+- Prepare simulation: `POST /api/simulation/prepare`
+- Generate report: `POST /api/report`
 
-Health check
+---
 
-GET /health
-
-Generate ontology
-
-POST /api/graph/ontology/generate
-
-Upload documents and generate ontology definitions.
-
-Build graph
-
-POST /api/graph/build
-
-Build or prepare graph data from generated ontology.
-
-Create simulation
-
-POST /api/simulation/create
-
-Create a simulation from a project.
-
-Prepare simulation
-
-POST /api/simulation/prepare
-
-Generate agent profiles and simulation configuration.
-
-Run simulation
-
-Simulation execution depends on the generated simulation files and runner configuration.
-
-Generate report
-
-POST /api/report
-
-Generate a report from simulation results.
-
-⸻
-
-Recommended first test
+## Recommended first test
 
 If this is your first time running mirollama, try the following setup:
-
+```dotenv
 LLM_BASE_URL=http://localhost:11434/v1
 LLM_MODEL_NAME=gpt-oss:20b
 SEARCH_PROVIDER=none
 WEB_SEARCH_LANGUAGE=ko-KR
+```
 
 Then upload a short Markdown or text file and use a simple scenario such as:
 
@@ -663,63 +595,50 @@ For best results, include documents that clearly describe:
 * The conflict or decision
 * The expected environment
 * The purpose of the simulation
+ 
+---
 
-⸻
+## Tips for better simulations
 
-Tips for better simulations
-
-Use specific scenarios
-
+### Use specific scenarios
 Less effective:
-
+```text
 Analyze this document.
+```
 
 More effective:
-
+```text
 Simulate how customers, competitors, and media might react if this product launches at a higher price than expected.
+```
 
-Upload context-rich documents
+### Upload context-rich documents
+Better simulations come from better context. Good documents include:
+- Background information
+- Stakeholder descriptions
+- Conflicting opinions
+- Prior events
+- Market or social context
 
-Better simulations come from better context.
+### Use stronger models for complex simulations
+- Complex documents / nuanced scenarios: `gpt-oss:120b`
+- General local testing: `gpt-oss:20b`
 
-Good documents include:
-
-* Background information
-* Stakeholder descriptions
-* Conflicting opinions
-* Prior events
-* Market or social context
-
-Use stronger models for complex simulations
-
-For complex documents and nuanced scenarios, use:
-
-gpt-oss:120b
-
-For general local testing, use:
-
-gpt-oss:20b
-
-Optional persona datasets by country
-
+### Optional persona datasets by country
 If you need country-specific persona datasets, download them from Hugging Face and keep them local.
 
 Example:
-
-* Korea: https://huggingface.co/datasets/nvidia/Nemotron-Personas-Korea
+- Korea: https://huggingface.co/datasets/nvidia/Nemotron-Personas-Korea
 
 Recommended local path:
-
-* `Nemotron-Personas-Korea/`
+- `Nemotron-Personas-Korea/`
 
 Important:
+- Do not commit `.arrow` files to Git.
+- Keep large dataset files in local cache/storage only.
 
-* Do not commit `.arrow` files to Git.
-* Keep large dataset files in local cache/storage only.
+---
 
-⸻
-
-Roadmap
+## Roadmap
 
 Planned improvements:
 
@@ -734,9 +653,9 @@ Planned improvements:
 * Exportable reports
 * Scenario comparison mode
 
-⸻
+---
 
-Security note
+## Security note
 
 mirollama is designed for local-first experimentation.
 
@@ -751,14 +670,13 @@ If you expose the backend to the public internet, make sure to configure:
 
 Do not expose sensitive documents through an unsecured public deployment.
 
-⸻
+---
 
-License
-
+## License
 MIT
 
-⸻
+---
 
-Credits
+## Credits
 
 mirollama is a derivative work based on MiroFish by 666ghj.
