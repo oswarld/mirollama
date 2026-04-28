@@ -25,30 +25,51 @@ mirollama is a local-first AI agent simulation workbench that turns your documen
 Upload documents, describe a situation, and let local LLM-powered agents simulate how different stakeholders may react.
 > mirollama is not a chatbot.  
 > It is a scenario lab.
+
 ---
-## Quickstart
 
-### Prerequisites
-- Node.js >= 18 (recommended: 20+)
-- Python (for the backend) and `uv` installed
+## Try the live demo
 
-### Run (dev)
+Static, PDF-grounded demos that walk through the end-to-end pipeline (graph build → personas → simulation → report) without spinning up Ollama. Each language has its own scenario PDF and its own US / China / Korea persona cohort:
+
+- 🇺🇸 **English** — FAA AI certification plan: [https://mirollama-local-fund-demo.vercel.app/live-demo/en](https://mirollama-local-fund-demo.vercel.app/live-demo/en)
+- 🇨🇳 **中文** — 第一次债权人会议公告: [https://mirollama-local-fund-demo.vercel.app/live-demo/zh](https://mirollama-local-fund-demo.vercel.app/live-demo/zh)
+- 🇰🇷 **한국어** — 2026 지방소멸대응기금: [https://mirollama-local-fund-demo.vercel.app/live-demo/ko](https://mirollama-local-fund-demo.vercel.app/live-demo/ko)
+
+These demos are intentionally static. To upload your own documents and run real multi-agent simulations, follow the local setup below.
+
+---
+
+## Quickstart (5 minutes, local)
+
 ```bash
+# 1. Install Ollama and pull the minimum-spec model (~19GB)
+ollama pull gemma4:31b
+ollama serve   # leaves the OpenAI-compatible API on http://localhost:11434/v1
+
+# 2. Clone and configure
+git clone https://github.com/oswarld/mirollama.git
+cd mirollama
+cp .env.example .env
+
+# 3. Install everything (root, frontend, backend)
 npm run setup:all
+
+# 4. Run frontend + backend together
 npm run dev
 ```
 
-### Run (frontend only)
-```bash
-npm run setup
-npm run frontend
-```
+Open `http://localhost:3000` for the UI and `http://localhost:5001/health` to confirm the backend.
+
+> mirollama uses **Gemma4 31b as its minimum baseline model**. Smaller models (7B–20B) will run but produce noticeably weaker ontology extraction and persona behavior. Hardware requirements for the minimum baseline are detailed in [System requirements](#system-requirements) below.
+
+---
 
 ## Repository layout
-- `backend/`: Python backend (run via `uv`)
-- `frontend/`: main web app UI
-- `local-fund-demo/`: static Next.js demo console grounded by `local_100M.pdf`
-- `persona-dashboard/`: supporting UI tooling (if applicable)
+- `backend/` — Python (Flask) backend, run via `uv`
+- `frontend/` — main web app UI (Vue 3 + Vite)
+- `local-fund-demo/` — static Next.js demo console deployed publicly (the live demo above)
+- `persona-dashboard/` — supporting UI tooling (optional)
 
 ## Demos
 
@@ -195,125 +216,132 @@ This means:
 ---
 
 ## Recommended models
-mirollama works best with larger and more capable local models.
 
-We currently recommend the following Ollama models for best performance:
-- `gpt-oss:120b`
-- `gpt-oss:20b`
-- `gemma4:31b`
-- `gemma4:26b`
+mirollama is tuned for capable local models. The minimum baseline is **`gemma4:31b`** — anything smaller (7B / 13B / 20B / 26B) runs, but the ontology, persona generation, and multi-agent narratives become visibly thinner.
 
-Best quality:
+| Model | When to pick it | Approx. on-disk | Approx. memory at runtime |
+|-------|-----------------|-----------------|--------------------------|
+| `gemma4:31b` | **Minimum baseline** — start here | ~19 GB (q4_K_M) | ~22–24 GB unified / VRAM |
+| `gpt-oss:120b` | High quality, complex multi-stakeholder simulations | ~70 GB (q4) | ~80 GB unified / VRAM |
+| `gpt-oss:20b` | Resource-constrained — works but expect weaker reasoning | ~12 GB | ~14–16 GB |
+
 ```bash
+# Minimum baseline (recommended starting point)
+ollama pull gemma4:31b
+
+# Higher quality (needs a workstation/server class GPU)
 ollama pull gpt-oss:120b
 ```
 
-Balanced option:
-```bash
-ollama pull gpt-oss:20b
-```
-
-Alternative models:
-```bash
-ollama pull gemma4:31b
-ollama pull gemma4:26b
-```
+Sub-baseline models (`gemma4:26b`, `gpt-oss:20b`, `llama3:8b`, etc.) are usable for early local testing but are not officially supported for the full simulation pipeline.
 
 ---
 
 ## System requirements
 
-### Minimum & Recommended Specifications
+The minimum baseline below assumes you are running **`gemma4:31b`**. To run `gpt-oss:120b` or other 70B+ models, plan on roughly 4× the memory.
 
-**macOS**
-* **Minimum:** Apple Silicon (M1/M2/M3) with 16GB Unified Memory or Intel Mac with 32GB RAM.
-* **Recommended:** Apple Silicon (M1/M2/M3 Max/Ultra) with 32GB+ Unified Memory for larger models (e.g., 30B+).
-* **Note:** Apple Silicon can run local models via Metal. NVIDIA VRAM guidance below mainly applies to Windows/Linux.
+### macOS (Apple Silicon)
+| | Minimum (gemma4:31b) | Recommended | Notes |
+|---|---|---|---|
+| Chip | M1 Max / M2 Pro / M3 Pro | M2 Max / M3 Max / M4 Pro+ | Inference uses Metal; no CUDA needed |
+| Unified memory | **24 GB** | 32 GB+ | 16 GB Macs cannot fit a 31B model in memory |
+| Storage | 30 GB free | 100 GB free for multi-model setups | |
 
-**Windows**
-* **Minimum:** Windows 10/11, Intel i5 / AMD Ryzen 5, 16GB RAM, NVIDIA GPU with 8GB VRAM (RTX 3060 or equivalent).
-* **Recommended:** Windows 11, Intel i7 / AMD Ryzen 7, 32GB+ RAM, NVIDIA GPU with 16GB+ VRAM (RTX 4080/4090 or equivalent) for optimal local LLM performance.
+### Windows / Linux (NVIDIA)
+| | Minimum (gemma4:31b) | Recommended | Notes |
+|---|---|---|---|
+| GPU | RTX 3090 / 4090 / A5000 | RTX 6000 Ada / A6000 / dual-3090 | **24 GB VRAM** is the practical floor for 31B at decent speed |
+| System RAM | 32 GB | 64 GB+ | Backend + frontend + Ollama + browser |
+| CPU | 6-core modern | 8-core modern | |
+| OS | Windows 11 / Ubuntu 22.04+ | same | CUDA toolkit installed |
+| Storage | 30 GB free | 100 GB+ free | |
 
-**Linux**
-* **Minimum:** Ubuntu 20.04+, 16GB RAM, NVIDIA GPU with 8GB VRAM.
-* **Recommended:** Ubuntu 22.04+, 32GB+ RAM, NVIDIA GPU with 16GB+ VRAM, CUDA toolkit installed.
-* **Note:** CPU-only works for small models but ontology + multi-agent simulation quality improves significantly with more VRAM.
+### CPU-only / Intel Mac
+Technically possible with 64 GB+ RAM, but `gemma4:31b` will respond at <1 token/sec on most consumer CPUs. Practical only for offline batch experiments.
 
-### Software Prerequisites:
-
-* Node.js 18+
-* Python 3.11+
-* uv
-* Ollama
-* Sufficient RAM/VRAM for the selected model
-
-Model requirements vary depending on the model size.
-
-For smaller local machines, start with:
-`gpt-oss:20b`
-
-For stronger workstations or servers, use:
-`gpt-oss:120b`
+### Software prerequisites
+- Node.js 20+ (18 still works, 20+ recommended)
+- Python 3.11+
+- [`uv`](https://github.com/astral-sh/uv) (Python package manager — required for the backend)
+- [Ollama](https://ollama.com) running locally
+- A pulled model (`gemma4:31b` minimum)
 
 ---
 
-## Quick start (detailed)
+## Local setup (detailed)
 
-1. Install Ollama  
-   Install Ollama from: https://ollama.com
+### 1. Install Ollama and pull the baseline model
+Install Ollama from [https://ollama.com](https://ollama.com), then:
 
-   Pull a recommended model:
-   ```bash
-   ollama pull gpt-oss:20b
-   ```
+```bash
+# 19 GB download — make sure you have the disk and memory budget above
+ollama pull gemma4:31b
 
-   Make sure Ollama is running:
-   ```bash
-   ollama serve
-   ```
+# Start the OpenAI-compatible API on http://localhost:11434/v1
+ollama serve
+```
 
-   Default OpenAI-compatible endpoint:
-   - `http://localhost:11434/v1`
+Verify Ollama is reachable:
+```bash
+curl http://localhost:11434/v1/models
+```
 
-2. Clone the repository
-   ```bash
-   git clone https://github.com/oswarld/mirollama.git
-   cd mirollama
-   ```
+### 2. Clone the repository
+```bash
+git clone https://github.com/oswarld/mirollama.git
+cd mirollama
+```
 
-3. Configure environment
-   ```bash
-   cp .env.example .env
-   ```
+### 3. Configure environment
+```bash
+cp .env.example .env
+```
 
-   Example `.env` configuration:
-   ```dotenv
-   # Local-first defaults
-   LLM_BASE_URL=http://localhost:11434/v1
-   LLM_MODEL_NAME=gpt-oss:20b
+`.env` for the minimum local baseline:
+```dotenv
+# Ollama OpenAI-compatible endpoint
+LLM_BASE_URL=http://localhost:11434/v1
+LLM_MODEL_NAME=gemma4:31b
 
-   # Search provider
-   # none: offline local mode
-   # searxng: self-hosted web search
-   SEARCH_PROVIDER=none
-   SEARXNG_BASE_URL=
-   WEB_SEARCH_LANGUAGE=ko-KR
-   WEB_SEARCH_LIMIT=10
-   ```
+# LLM_API_KEY is optional for local Ollama. Leave commented unless your
+# proxy or self-hosted gateway requires a token.
+# LLM_API_KEY=ollama
 
-4. Install dependencies
-   ```bash
-   npm run setup:all
-   ```
+# Search provider
+# none: pure local, no web search
+# searxng: self-hosted SearXNG instance
+SEARCH_PROVIDER=none
+SEARXNG_BASE_URL=
+WEB_SEARCH_LANGUAGE=en-US
+WEB_SEARCH_LIMIT=10
+```
 
-5. Run mirollama
-   ```bash
-   npm run dev
-   ```
+### 4. Install dependencies
+```bash
+npm run setup:all   # installs root, frontend, and backend (uv sync)
+```
 
-   - Frontend: `http://localhost:3000`
-   - Backend: `http://localhost:5001`
-   - Health check: `http://localhost:5001/health`
+If you only need the frontend or backend individually:
+```bash
+npm run setup           # root + frontend
+npm run setup:backend   # backend (uv sync)
+```
+
+### 5. Run mirollama
+```bash
+npm run dev
+```
+
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:5001`
+- Health check: `http://localhost:5001/health`
+
+### 6. Verify the loop end-to-end
+1. Drop a short PDF or markdown file into the upload area
+2. Type a one-sentence scenario (for example: *"Simulate how three city groups might react if this policy passes next month."*)
+3. Watch the pipeline run: ontology → personas → simulation → report
+4. If the run hangs at "Building Graph" or persona generation, your model is likely too small or out of memory — try `gemma4:31b` if you were on a smaller model, or close other GPU/Metal-using apps
 
 ---
 
@@ -562,9 +590,9 @@ Note: depending on the current image configuration, Docker may use the upstream 
 If this is your first time running mirollama, try the following setup:
 ```dotenv
 LLM_BASE_URL=http://localhost:11434/v1
-LLM_MODEL_NAME=gpt-oss:20b
+LLM_MODEL_NAME=gemma4:31b
 SEARCH_PROVIDER=none
-WEB_SEARCH_LANGUAGE=ko-KR
+WEB_SEARCH_LANGUAGE=en-US
 ```
 
 Then upload a short Markdown or text file and use a simple scenario such as:
@@ -604,7 +632,7 @@ Better simulations come from better context. Good documents include:
 
 ### Use stronger models for complex simulations
 - Complex documents / nuanced scenarios: `gpt-oss:120b`
-- General local testing: `gpt-oss:20b`
+- General local testing (minimum baseline): `gemma4:31b`
 
 ### Optional persona datasets by country
 If you need country-specific persona datasets, download them from Hugging Face and keep them local.
