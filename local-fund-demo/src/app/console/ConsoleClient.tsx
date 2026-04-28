@@ -1183,7 +1183,7 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
             </div>
           ) : (
             <>
-              <div className="bg-[#121214]/60 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col h-1/2 relative overflow-hidden shadow-xl">
+              <div className="bg-[#121214]/60 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col h-[260px] shrink-0 relative overflow-hidden shadow-xl">
                 <div className="bg-[#050505]/50 border-b border-white/5 px-5 py-3 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <Terminal className="w-4 h-4 text-emerald-400" />
@@ -1228,7 +1228,30 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
                 </div>
               </div>
 
-              <div className="bg-[#121214]/60 backdrop-blur-xl border border-white/10 rounded-2xl flex-1 flex flex-col relative overflow-hidden shadow-xl">
+              <div className="bg-[#121214]/60 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col h-[320px] shrink-0 relative overflow-hidden shadow-xl">
+                <div className="bg-[#050505]/50 border-b border-white/5 px-5 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Activity className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                      GraphRAG · {stageCopy[1].title}
+                    </span>
+                  </div>
+                  <div className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
+                    {revealedNodes} / {TOTAL_PERSONAS} agents
+                  </div>
+                </div>
+                <div className="flex-1 relative bg-[#050505]">
+                  {currentStep === 0 ? (
+                    <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-xs">
+                      {stageCopy[0].desc}
+                    </div>
+                  ) : (
+                    <ResponsivePersonaGraph lang={config.lang} revealCount={revealedNodes} />
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-[#121214]/60 backdrop-blur-xl border border-white/10 rounded-2xl flex-1 flex flex-col relative overflow-hidden shadow-xl min-h-[260px]">
                 <div className="bg-[#050505]/70 border-b border-white/10 px-5 py-4 flex items-center justify-between z-10 relative shadow-sm">
                   <div className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
                     <Activity className="w-4 h-4 text-emerald-400" />
@@ -1251,16 +1274,6 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
                     </div>
                   ) : (
                     <>
-                      <div className="rounded-2xl border border-white/10 bg-[#050505] overflow-hidden h-[300px] sm:h-[340px] relative">
-                        <ResponsivePersonaGraph lang={config.lang} revealCount={revealedNodes} />
-                        <div className="pointer-events-none absolute left-4 top-4 z-10">
-                          <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">GraphRAG</div>
-                          <div className="mt-0.5 text-sm font-bold text-slate-200">{stageCopy[1].title}</div>
-                        </div>
-                        <div className="pointer-events-none absolute right-4 top-4 z-10 rounded-md bg-emerald-500/10 px-2 py-1 text-[11px] font-bold text-emerald-300 ring-1 ring-emerald-500/30">
-                          {revealedNodes} / {TOTAL_PERSONAS} agents
-                        </div>
-                      </div>
                       {([1, 2, 3, 4, 5] as Step[]).map((stepId) => {
                       const isCurrent = currentStep === stepId;
                       const isCompleted = currentStep > stepId;
