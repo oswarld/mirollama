@@ -580,13 +580,17 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
   const ui = useMemo(() => getUiText(config.lang), [config.lang]);
   const stageCopy = useMemo(() => getStageCopy(config.lang), [config.lang]);
 
+  // Scroll the active step card into view *within* the steps container only.
+  // Using element.scrollIntoView() walks up the DOM and scrolls the window too,
+  // which made the whole page jump every step transition.
   useEffect(() => {
-    if (currentStep > 0 && stepsContainerRef.current) {
-      const activeCard = stepsContainerRef.current.querySelector(`[data-step="${currentStep}"]`);
-      if (activeCard) {
-        activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
+    if (currentStep <= 0) return;
+    const container = stepsContainerRef.current;
+    if (!container) return;
+    const activeCard = container.querySelector(`[data-step="${currentStep}"]`);
+    if (!(activeCard instanceof HTMLElement)) return;
+    const top = activeCard.offsetTop - 16;
+    container.scrollTo({ top, behavior: 'smooth' });
   }, [currentStep]);
 
   const renderStepContent = (stepId: Step) => {
@@ -801,8 +805,12 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
     return null;
   };
 
+  // Scroll the logs container to the bottom *within* itself only — never the window.
   useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const sentinel = logsEndRef.current;
+    const container = sentinel?.parentElement;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
   }, [logs]);
 
   useEffect(() => {
