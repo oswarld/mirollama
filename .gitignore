@@ -58,3 +58,6 @@ backend/uploads/
 
 # Docker 数据
 data/Nemotron-Personas-Korea/
+
+# Local dataset cache
+Nemotron-Personas-Korea/
