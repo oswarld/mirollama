@@ -606,23 +606,11 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
               {ui.viewSourcePdf} <ChevronRight className="w-3 h-3" />
             </button>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-            <div className="lg:col-span-2 bg-[#050505]/80 border border-white/5 rounded-2xl p-5 shadow-inner">
-              <div className="space-y-2 text-sm text-slate-300">
-                {config.evidenceBullets.map(line => (
-                  <div key={line} className="flex gap-2"><span className="text-emerald-500/50">&bull;</span> {line}</div>
-                ))}
-              </div>
-            </div>
-            <div className="lg:col-span-3 relative min-h-[320px] rounded-2xl border border-white/10 bg-[#050505] overflow-hidden">
-              <ResponsivePersonaGraph lang={config.lang} revealCount={revealedNodes} />
-              <div className="pointer-events-none absolute left-4 top-4 z-10">
-                <div className="text-sm font-bold text-slate-200">{stageCopy[1].title}</div>
-                <div className="mt-1 text-xs text-slate-500">{stageCopy[1].desc}</div>
-              </div>
-              <div className="pointer-events-none absolute right-4 top-4 z-10 rounded-md bg-emerald-500/10 px-2 py-1 text-[11px] font-bold text-emerald-300 ring-1 ring-emerald-500/30">
-                {revealedNodes} / {TOTAL_PERSONAS} agents
-              </div>
+          <div className="bg-[#050505]/80 border border-white/5 rounded-2xl p-5 shadow-inner">
+            <div className="space-y-2 text-sm text-slate-300">
+              {config.evidenceBullets.map(line => (
+                <div key={line} className="flex gap-2"><span className="text-emerald-500/50">&bull;</span> {line}</div>
+              ))}
             </div>
           </div>
         </div>
@@ -968,6 +956,27 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
           <div className="hidden md:flex items-center gap-2 text-slate-500 px-3 py-1.5 rounded-full border border-white/5">
             <Cpu className="w-3.5 h-3.5" /> {ui.engine}: LocalFund-V0.1
           </div>
+          <div className="flex items-center gap-1 p-1 bg-white/5 border border-white/5 rounded-full">
+            {([
+              { code: 'ko', label: '한국어' },
+              { code: 'zh', label: '中文' },
+              { code: 'en', label: 'EN' },
+            ] as const).map(({ code, label }) => (
+              <Link
+                key={code}
+                href={`/live-demo/${code}`}
+                prefetch={false}
+                className={cn(
+                  'px-3 py-1 rounded-full text-[11px] font-bold transition-all',
+                  config.lang === code
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : 'text-slate-500 hover:text-slate-300',
+                )}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -1242,6 +1251,16 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
                     </div>
                   ) : (
                     <>
+                      <div className="rounded-2xl border border-white/10 bg-[#050505] overflow-hidden h-[300px] sm:h-[340px] relative">
+                        <ResponsivePersonaGraph lang={config.lang} revealCount={revealedNodes} />
+                        <div className="pointer-events-none absolute left-4 top-4 z-10">
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">GraphRAG</div>
+                          <div className="mt-0.5 text-sm font-bold text-slate-200">{stageCopy[1].title}</div>
+                        </div>
+                        <div className="pointer-events-none absolute right-4 top-4 z-10 rounded-md bg-emerald-500/10 px-2 py-1 text-[11px] font-bold text-emerald-300 ring-1 ring-emerald-500/30">
+                          {revealedNodes} / {TOTAL_PERSONAS} agents
+                        </div>
+                      </div>
                       {([1, 2, 3, 4, 5] as Step[]).map((stepId) => {
                       const isCurrent = currentStep === stepId;
                       const isCompleted = currentStep > stepId;
