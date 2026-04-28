@@ -51,3 +51,7 @@ If this repository is a monorepo, set the Vercel project Root Directory to `loca
 - Framework Preset: Next.js
 - Build Command: `npm run build`
 - Output: leave default (Next.js)
+
+One-click deploy:
+
+- [Deploy local-fund-demo on Vercel](https://vercel.com/new/clone?repository-url=https://github.com/oswarld/mirollama&project-name=mirollama-local-fund-demo&root-directory=local-fund-demo&framework=nextjs)
