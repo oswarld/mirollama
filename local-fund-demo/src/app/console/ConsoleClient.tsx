@@ -659,7 +659,13 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
 
     const nextText = plan.logs[cursor];
     const nextStep = stepForLogText(nextText) ?? stepForLogIndex(cursor, plan.logs.length);
-    const tickMs = 800;
+
+    // Hold log advance while the active phase's counter is still running so the
+    // viewer actually sees every node appear (step 1) and every round tick (step 3).
+    if (currentStep === 1 && nextStep > 1 && revealedNodes < TOTAL_PERSONAS) return;
+    if (currentStep === 3 && nextStep > 3 && currentRound < TOTAL_ROUNDS) return;
+
+    const tickMs = 1800;
 
     const timer = window.setTimeout(() => {
       setLogs(prev => [...prev, makeLogLine(nextText)]);
@@ -670,26 +676,27 @@ export default function ConsoleClient({ config = DEFAULT_CONFIG }: { config?: Li
     }, tickMs);
 
     return () => window.clearTimeout(timer);
-  }, [cursor, runPlan, runState]);
+  }, [cursor, runPlan, runState, currentStep, revealedNodes, currentRound]);
 
-  // Reveal persona nodes once the run starts: ~50 nodes over ~3 seconds.
+  // Reveal persona nodes once the run starts: ~50 nodes over ~5 seconds.
   useEffect(() => {
     if (runState !== 'running') return;
     if (revealedNodes >= TOTAL_PERSONAS) return;
     const timer = window.setTimeout(() => {
       setRevealedNodes(prev => Math.min(TOTAL_PERSONAS, prev + 1));
-    }, 60);
+    }, 100);
     return () => window.clearTimeout(timer);
   }, [revealedNodes, runState]);
 
   // Round counter starts ticking once the run reaches step 3 (Simulation).
+  // ~50 rounds over ~4 seconds.
   useEffect(() => {
     if (runState !== 'running') return;
     if (currentStep < 3) return;
     if (currentRound >= TOTAL_ROUNDS) return;
     const timer = window.setTimeout(() => {
       setCurrentRound(prev => Math.min(TOTAL_ROUNDS, prev + 1));
-    }, 30);
+    }, 80);
     return () => window.clearTimeout(timer);
   }, [currentStep, currentRound, runState]);
 
