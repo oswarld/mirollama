@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="static/image/mirollama.png" width="480" alt="mirollama" />
+</p>
+
 # mirollama
 
 <p align="center">
